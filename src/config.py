@@ -1,5 +1,9 @@
-from pydantic import BaseModel, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, PostgresDsn
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 
 class RunApiConfig(BaseModel):
@@ -19,15 +23,24 @@ class AppDBConfig(BaseModel):
     """Конфигурация БД нашего приложения"""
 
     url: PostgresDsn
+    echo: int = 0
     ...
+
+
+class TMDPApiConfig(BaseModel):
+    """Конфигурация внешней TMDB API"""
+
+    base_url: str = "https://api.themoviedb.org/3/movie"
+    api_key: str
 
 
 class Settings(BaseSettings):
     """Общая конфигурация"""
 
     api: RunApiConfig = RunApiConfig()
+    tmdb_api: TMDPApiConfig
     bot: BotConfig
-    # db: AppDBConfig
+    db: AppDBConfig
 
     model_config = SettingsConfigDict(
         env_file=("../.env.example", "../.env"),
