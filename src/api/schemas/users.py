@@ -2,9 +2,9 @@ from pydantic import BaseModel
 
 
 class UserCreateSchema(BaseModel):
+    tg_id: int
     username: str
 
 
-class UserReadSchema(BaseModel):
+class UserReadSchema(UserCreateSchema):
     id: int
-    username: str

@@ -9,6 +9,7 @@ from alembic import context
 
 from config import settings
 from database.core import Base
+from api.routers.v1.users import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

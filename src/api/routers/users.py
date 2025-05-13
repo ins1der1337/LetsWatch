@@ -2,8 +2,8 @@ from typing import List
 
 from fastapi import APIRouter
 
-from api.routers.v1.users.schemas import UserCreateSchema, UserReadSchema
-from api.routers.v1.users.service import UserRepository
+from api.schemas.users import UserCreateSchema, UserReadSchema
+from api.services.users import UserRepository
 from database.core import DbSession
 
 router = APIRouter(tags=["Пользователи🤠"], prefix="/users")

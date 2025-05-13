@@ -1,8 +1,8 @@
 """init migration
 
-Revision ID: 49338c07a086
+Revision ID: 660c04a63a13
 Revises:
-Create Date: 2025-05-07 19:46:28.231093
+Create Date: 2025-05-13 21:12:46.789601
 
 """
 
@@ -13,26 +13,27 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "49338c07a086"
+revision: str = "660c04a63a13"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
+    """Upgrade schemas."""
     op.create_table(
         "users",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("username", sa.String(length=30), nullable=False),
-        sa.Column("create_date", sa.DateTime(), nullable=False),
+        sa.Column("tg_id", sa.Integer(), nullable=False),
+        sa.Column("username", sa.String(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("username"),
+        sa.UniqueConstraint("tg_id"),
     )
     op.create_index(op.f("ix_users_id"), "users", ["id"], unique=False)
 
 
 def downgrade() -> None:
-    """Downgrade schema."""
+    """Downgrade schemas."""
     op.drop_index(op.f("ix_users_id"), table_name="users")
     op.drop_table("users")

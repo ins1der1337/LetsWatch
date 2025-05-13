@@ -21,7 +21,12 @@ async def lifespan(_: FastAPI):
     await db_helper.dispose()
 
 
-app = FastAPI(title="LetsWatch", lifespan=lifespan, version='0.1.5')
+app = FastAPI(
+    title="LetsWatch",
+    lifespan=lifespan,
+    version="0.1.5",
+    default_response_class=ORJSONResponse,
+)
 
 app.include_router(main_router)
 

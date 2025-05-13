@@ -4,8 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.exceptions import NotFoundException, BadRequestException
-from api.routers.v1.users.schemas import UserCreateSchema
-from api.routers.v1.users.models import User
+from api.schemas.users import UserCreateSchema
+from api.models import User
 
 
 class UserRepository:
@@ -19,7 +19,7 @@ class UserRepository:
     async def get_users_by_user_id(cls, session: AsyncSession, user_id: int) -> User:
         res = await session.scalar(select(User).filter(User.id == user_id))
         if not res:
-            raise NotFoundException("User not found")
+            raise NotFoundException("Пользователь не найден")
         return res
 
     @classmethod
