@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter
 
 from api.schemas.users import UserCreateSchema, UserReadSchema
@@ -9,7 +7,7 @@ from database.core import DbSession
 router = APIRouter(tags=["Пользователи🤠"], prefix="/users")
 
 
-@router.get("", response_model=List[UserReadSchema])
+@router.get("", response_model=list[UserReadSchema])
 async def get_users(session: DbSession):
     users = await UserRepository.get_all_users(session)
     return users

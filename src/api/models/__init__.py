@@ -1,5 +1,3 @@
-__all__ = (
-    "User"
-)
+__all__ = ("User",)
 
 from .users import User

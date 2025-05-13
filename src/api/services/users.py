@@ -30,7 +30,7 @@ class UserRepository:
             select(User).where(User.username == user_data.username)
         )
         if existing_user:
-            raise BadRequestException("Username already exists")
+            raise BadRequestException("Такой юзернейм уже существует")
 
         session.add(new_user := User(**user_data.model_dump()))
 
