@@ -1,38 +1,27 @@
-from typing import Iterable
+from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.exceptions import NotFoundException, BadRequestException
-from api.schemas.users import UserCreateSchema
-from api.models import User
+from core.schemas.movies import PaginationSchema
+from core.schemas.users import UserCreateSchema
+from core.models import User
 
 
 class UserRepository:
 
     @classmethod
-    async def get_all_users(cls, session: AsyncSession) -> Iterable[User]:
-        res = await session.execute(select(User))
-        return res.scalars().all()
-
-    @classmethod
-    async def get_users_by_user_id(cls, session: AsyncSession, user_id: int) -> User:
-        res = await session.scalar(select(User).filter(User.id == user_id))
-        if not res:
-            raise NotFoundException("Пользователь не найден")
-        return res
-
-    @classmethod
     async def create_user(
-        cls, session: AsyncSession, user_data: UserCreateSchema
+        cls, session: AsyncSession, tg_id: int, user_data: UserCreateSchema
     ) -> User:
-        existing_user = await session.scalar(
-            select(User).where(User.username == user_data.username)
-        )
+        existing_user = await session.scalar(select(User).where(User.tg_id == tg_id))
         if existing_user:
-            raise BadRequestException("Такой юзернейм уже существует")
+            raise BadRequestException("Такой пользователь уже зарегистрирован")
 
-        session.add(new_user := User(**user_data.model_dump()))
+        data = {"tg_id": tg_id, **user_data.model_dump()}
+
+        session.add(new_user := User(**data))
 
         await session.commit()
         await session.refresh(new_user)
@@ -40,11 +29,41 @@ class UserRepository:
         return new_user
 
     @classmethod
-    async def delete_user(cls, session: AsyncSession, user_id: int):
-        pass
+    async def update_user(
+        cls, session: AsyncSession, tg_id: int, user_update_data: UserCreateSchema
+    ) -> User:
+        user = await session.scalar(select(User).where(User.tg_id == tg_id))
+
+        if not user:
+            raise NotFoundException("Такого пользователя нет")
+
+        for key, value in user_update_data:
+            if not hasattr(user, key):
+                raise BadRequestException(f"Такого столбца у пользователя нет: {key}")
+            setattr(user, key, value)
+
+        await session.commit()
+        await session.refresh(user)
+
+        return user
 
     @classmethod
-    async def update_user(
-        cls, session: AsyncSession, user_id: int, update_data: UserCreateSchema
+    async def get_all_users(
+        cls, session: AsyncSession, pagination: PaginationSchema
+    ) -> Sequence[User]:
+        query = (
+            select(User)
+            .offset((pagination.page - 1) * pagination.limit)
+            .limit(pagination.limit)
+        )
+        res = await session.execute(query)
+        return res.scalars().all()
+
+    @classmethod
+    async def get_user_by_tg_id(
+        cls, session: AsyncSession, tg_id: int, not_found_error: bool = True
     ) -> User:
-        pass
+        res = await session.scalar(select(User).filter(User.tg_id == tg_id))
+        if not res and not_found_error:
+            raise NotFoundException("Пользователь не найден")
+        return res

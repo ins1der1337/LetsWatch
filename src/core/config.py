@@ -24,21 +24,12 @@ class AppDBConfig(BaseModel):
 
     url: PostgresDsn
     echo: int = 0
-    ...
-
-
-class TMDPApiConfig(BaseModel):
-    """Конфигурация внешней TMDB API"""
-
-    base_url: str = "https://api.themoviedb.org/3/movie"
-    api_key: str
 
 
 class Settings(BaseSettings):
     """Общая конфигурация"""
 
     api: RunApiConfig = RunApiConfig()
-    tmdb_api: TMDPApiConfig
     bot: BotConfig
     db: AppDBConfig
 

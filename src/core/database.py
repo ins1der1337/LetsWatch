@@ -1,9 +1,7 @@
 from datetime import datetime
-from typing import AsyncGenerator, Annotated
+from typing import AsyncGenerator
 
-from fastapi import Depends
 from sqlalchemy import func
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker,
@@ -13,13 +11,16 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import mapped_column, Mapped, DeclarativeBase
 from sqlalchemy.types import Integer, DateTime
 
-from api.exceptions import UnavailableServiceException
-from config import settings
+from core.config import settings
 
 
 class Base(DeclarativeBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), onupdate=func.now()
+    )
 
 
 class DataBaseHelper:
@@ -31,9 +32,11 @@ class DataBaseHelper:
         async with self._session_factory() as session:
             try:
                 yield session
-            except OperationalError as e:
+
+            except Exception:
                 await session.rollback()
-                raise UnavailableServiceException(message=str(e))
+                raise
+
             finally:
                 await session.close()
 
@@ -42,4 +45,3 @@ class DataBaseHelper:
 
 
 db_helper = DataBaseHelper(url=str(settings.db.url), echo=int(settings.db.echo))
-DbSession = Annotated[AsyncSession, Depends(db_helper.get_session)]
