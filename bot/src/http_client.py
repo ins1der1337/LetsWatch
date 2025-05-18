@@ -20,7 +20,7 @@ class ApiClient:
 
     async def register_user(self, tg_id: int, username: str) -> None:
         async with self._session.post(
-            f"users/{tg_id}", json={"username": username}
+            f"users/{tg_id}", json={"username": username}, params={"title": t}
         ) as response:
             res = await response.json()
             return res
