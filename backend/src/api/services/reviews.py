@@ -3,7 +3,7 @@ from typing import Iterable
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy import insert, select
 
-from api.exceptions import NotFoundException
+from api.exceptions import NotFoundException, BadRequestException
 from api.services.users import UserRepository
 from core.models import Review
 from core.schemas.reviews import ReviewCreateSchema
@@ -17,11 +17,22 @@ class ReviewsRepository:
         session: AsyncSession,
         tg_id: int,
         movie_id: int,
-        review: ReviewCreateSchema,
+        review_data: ReviewCreateSchema,
     ) -> Review:
-        user = await UserRepository.get_user_by_tg_id(session, tg_id)
 
-        data = {"tg_id": tg_id, "movie_id": movie_id, **review.model_dump()}
+        review = await session.scalar(
+            select(Review)
+            .where(
+                Review.tg_id == tg_id,
+                Review.movie_id == movie_id
+            )
+            .order_by(Review.id)
+        )
+
+        if review:
+            raise BadRequestException("Отзыв на этот фильм уже имеется")
+
+        data = {"tg_id": tg_id, "movie_id": movie_id, **review_data.model_dump()}
 
         stmt = (
             insert(Review)

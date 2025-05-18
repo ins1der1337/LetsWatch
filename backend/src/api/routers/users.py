@@ -39,15 +39,15 @@ async def create_user(
     return user
 
 
-@router.patch("/{tg_id}", response_model=UserReadSchema)
-async def update_user(
-    tg_id: int,
-    session: DbSession,
-    data: UserCreateSchema,
-):
-    """
-    Обновление юзера в БД (по tg_id)
-    Происходит при повторной отправке `/start` (если вдруг у пользователя поменялось имя)
-    """
-    new_user = await UserRepository.update_user(session, tg_id, data)
-    return new_user
+# @router.patch("/{tg_id}", response_model=UserReadSchema)
+# async def update_user(
+#     tg_id: int,
+#     session: DbSession,
+#     data: UserCreateSchema,
+# ):
+#     """
+#     Обновление юзера в БД (по tg_id)
+#     Происходит при повторной отправке `/start` (если вдруг у пользователя поменялось имя)
+#     """
+#     new_user = await UserRepository.update_user(session, tg_id, data)
+#     return new_user
