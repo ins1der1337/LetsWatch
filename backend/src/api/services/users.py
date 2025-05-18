@@ -4,7 +4,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.exceptions import NotFoundException, BadRequestException
-from core.schemas.movies import PaginationSchema
+from core.schemas.movies import PaginationParams
 from core.schemas.users import UserCreateSchema
 from core.models import User
 
@@ -49,7 +49,7 @@ class UserRepository:
 
     @classmethod
     async def get_all_users(
-        cls, session: AsyncSession, pagination: PaginationSchema
+        cls, session: AsyncSession, pagination: PaginationParams
     ) -> Sequence[User]:
         query = (
             select(User)

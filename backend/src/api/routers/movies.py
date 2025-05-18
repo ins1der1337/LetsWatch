@@ -1,13 +1,23 @@
 from fastapi import APIRouter
 
-from api.dependencies import PaginationParams
+from api.dependencies import PaginationDep, FiltersDep
+from core.schemas.movies import MoviesResponseSchema
 
 router = APIRouter(prefix="/movies", tags=["Фильмы"])
 
 
-@router.get("")
-async def get_movies(pagination: PaginationParams):
-    pass
+@router.get("", response_model=MoviesResponseSchema)
+async def get_movies(pagination: PaginationDep, filters: FiltersDep):
+
+    # TODO сделать запрос на количество фильмов в целом
+
+    return MoviesResponseSchema(
+        movies=[],
+        filters=filters,
+        pagination=pagination,
+        total_pages=0,
+        total_movies=0,
+    )
 
 
 @router.get("/{movie_id}")

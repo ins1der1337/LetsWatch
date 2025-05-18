@@ -5,11 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "pydantic>=2.11.4",
+    "aiogram>=3.20.0.post0",
+    "aiohttp>=3.11.18",
     "pydantic-settings>=2.9.1",
-]
-
-[dependency-groups]
-dev = [
-    "black>=25.1.0",
 ]

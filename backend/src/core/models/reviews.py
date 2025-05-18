@@ -11,6 +11,4 @@ class Review(Base):
     movie_id: Mapped[int]
     rating: Mapped[int]
 
-    __table_args__ = (
-        UniqueConstraint("tg_id", "movie_id", name="uq_tg_id_movie_id"),
-    )
+    __table_args__ = (UniqueConstraint("tg_id", "movie_id", name="uq_tg_id_movie_id"),)

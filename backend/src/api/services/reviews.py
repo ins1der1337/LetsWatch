@@ -22,10 +22,7 @@ class ReviewsRepository:
 
         review = await session.scalar(
             select(Review)
-            .where(
-                Review.tg_id == tg_id,
-                Review.movie_id == movie_id
-            )
+            .where(Review.tg_id == tg_id, Review.movie_id == movie_id)
             .order_by(Review.id)
         )
 
@@ -34,11 +31,7 @@ class ReviewsRepository:
 
         data = {"tg_id": tg_id, "movie_id": movie_id, **review_data.model_dump()}
 
-        stmt = (
-            insert(Review)
-            .values(**data)
-            .returning(Review)
-        )
+        stmt = insert(Review).values(**data).returning(Review)
 
         review = await session.scalar(stmt)
         await session.commit()
@@ -61,7 +54,5 @@ class ReviewsRepository:
     async def get_user_reviews(
         cls, session: AsyncSession, tg_id: int
     ) -> Iterable[Review]:
-        res = await session.scalars(
-            select(Review).where(Review.tg_id == tg_id)
-        )
+        res = await session.scalars(select(Review).where(Review.tg_id == tg_id))
         return res.all()

@@ -1,7 +1,10 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field
+from fastapi import Query
 
 
-class MoviesReadSchema(BaseModel):
+class MovieReadSchema(BaseModel):
     id: int
     movie_id: int
     tmdb_id: int
@@ -15,11 +18,20 @@ class MoviesReadSchema(BaseModel):
     actors: str = Field(max_length=128)
 
 
-class MoviesResponseSchema(BaseModel):
-    movies: MoviesReadSchema
-    total_movies: int
-
-
-class PaginationSchema(BaseModel):
+class PaginationParams(BaseModel):
     limit: int = Field(5, gt=0, le=15)
     page: int = Field(1, ge=0)
+
+
+class FiltersParams(BaseModel):
+    title: Optional[str] = Field(None, max_length=64)
+    genre: Optional[str] = Field(None, max_length=32)
+    actor: Optional[str] = Field(None, max_length=32)
+
+
+class MoviesResponseSchema(BaseModel):
+    movies: list[MovieReadSchema]
+    pagination: PaginationParams
+    filters: Optional[FiltersParams] = None
+    total_movies: int
+    total_pages: int
