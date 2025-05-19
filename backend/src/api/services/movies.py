@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from pandas.core.frame import DataFrame
@@ -19,29 +20,29 @@ class MovieRepository:
         self.df = self.df.reset_index(drop=True)
         self.df = self.df.drop(columns=["Unnamed: 0", "tmdbId"])
 
-    def search_by_title(
-        self, title: str, pagination: PaginationParams
-    ) -> MoviesResponseSchema:
-        filtered_df = self.df[
-            self.df["title"].str.contains(title, case=False, na=False)
-        ]
-        return self._process_movie_response(filtered_df, pagination)
+    def search_movies(
+        self,
+        pagination: PaginationParams,
+        title: Optional[str] = None,
+        genre: Optional[str] = None,
+        actor: Optional[str] = None,
+    ):
+        temp_df = self.df.copy()
 
-    def search_by_genre(
-        self, genre: str, pagination: PaginationParams
-    ) -> MoviesResponseSchema:
-        filtered_df = self.df[
-            self.df["genres"].str.contains(genre, case=False, na=False)
-        ]
-        return self._process_movie_response(filtered_df, pagination)
+        if title:
+            temp_df = temp_df[
+                temp_df["title"].str.contains(title, case=False, na=False)
+            ]
+        if genre:
+            temp_df = temp_df[
+                temp_df["genres"].str.contains(genre, case=False, na=False)
+            ]
+        if actor:
+            temp_df = temp_df[
+                temp_df["actors"].str.contains(actor, case=False, na=False)
+            ]
 
-    def search_by_actor(
-        self, actor: str, pagination: PaginationParams
-    ) -> MoviesResponseSchema:
-        filtered_df = self.df[
-            self.df["actors"].str.contains(actor, case=False, na=False)
-        ]
-        return self._process_movie_response(filtered_df, pagination)
+        return self._process_movie_response(temp_df, pagination)
 
     def _process_movie_response(
         self, df: DataFrame, pagination: PaginationParams
@@ -92,9 +93,9 @@ class MovieRepository:
             raise BadRequestException("Дальше страниц нет")
 
         df = df.iloc[
-             (pagination.page - 1) * pagination.limit: pagination.limit
-                                                       + (pagination.page - 1) * pagination.limit
-             ]
+            (pagination.page - 1) * pagination.limit : pagination.limit
+            + (pagination.page - 1) * pagination.limit
+        ]
         return df
 
 
