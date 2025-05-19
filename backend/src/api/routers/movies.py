@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from api.dependencies import PaginationDep, FiltersDep
+from api.services.movies import movie_db
 from core.schemas.movies import MoviesResponseSchema
 
 router = APIRouter(prefix="/movies", tags=["Фильмы"])
@@ -23,3 +24,9 @@ async def get_movies(pagination: PaginationDep, filters: FiltersDep):
 @router.get("/{movie_id}")
 async def get_movie_by_id(movie_id: int):
     pass
+
+
+@router.get("/search-by-title/{title}")
+async def get_movie_by_title(title: str, pagination: PaginationDep):
+    res = movie_db.search_by_title(title, pagination)
+    return res

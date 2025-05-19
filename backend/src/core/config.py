@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import BaseModel, PostgresDsn
 from dotenv import load_dotenv
@@ -20,10 +22,15 @@ class AppDBConfig(BaseModel):
     echo: int = 0
 
 
+class MovieDbConfig(BaseModel):
+    movie_data: Path = Path(__file__).parent.parent.parent / "data" / "movies_main.csv"
+
+
 class Settings(BaseSettings):
     """Общая конфигурация"""
 
     api: RunApiConfig = RunApiConfig()
+    movie: MovieDbConfig = MovieDbConfig()
     db: AppDBConfig
 
     model_config = SettingsConfigDict(

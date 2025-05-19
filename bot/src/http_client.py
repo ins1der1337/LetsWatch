@@ -10,7 +10,6 @@ class ApiClient:
 
     async def create_session(self):
         if self._session is None:
-            print(self._base_url)
             self._session = ClientSession(base_url=f'{self._base_url}/')
 
     async def close_session(self):
@@ -20,7 +19,7 @@ class ApiClient:
 
     async def register_user(self, tg_id: int, username: str) -> None:
         async with self._session.post(
-            f"users/{tg_id}", json={"username": username}, params={"title": t}
+            f"users/{tg_id}", json={"username": username}
         ) as response:
             res = await response.json()
             return res
