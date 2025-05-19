@@ -1,9 +1,9 @@
 from pathlib import Path
 
 import pandas as pd
-from pandas.core.frame import DataFrame, Series
+from pandas.core.frame import DataFrame
 
-from api.exceptions import BadRequestException
+from api.exceptions import BadRequestException, NotFoundException
 from core.config import settings
 from core.schemas.movies import PaginationParams, MovieReadSchema, MoviesResponseSchema
 
@@ -19,8 +19,45 @@ class MovieRepository:
         self.df = self.df.reset_index(drop=True)
         self.df = self.df.drop(columns=["Unnamed: 0", "tmdbId"])
 
+    def search_by_title(
+        self, title: str, pagination: PaginationParams
+    ) -> MoviesResponseSchema:
+        filtered_df = self.df[
+            self.df["title"].str.contains(title, case=False, na=False)
+        ]
+        return self._process_movie_response(filtered_df, pagination)
+
+    def search_by_genre(
+        self, genre: str, pagination: PaginationParams
+    ) -> MoviesResponseSchema:
+        filtered_df = self.df[
+            self.df["genres"].str.contains(genre, case=False, na=False)
+        ]
+        return self._process_movie_response(filtered_df, pagination)
+
+    def search_by_actor(
+        self, actor: str, pagination: PaginationParams
+    ) -> MoviesResponseSchema:
+        filtered_df = self.df[
+            self.df["actors"].str.contains(actor, case=False, na=False)
+        ]
+        return self._process_movie_response(filtered_df, pagination)
+
+    def _process_movie_response(
+        self, df: DataFrame, pagination: PaginationParams
+    ) -> MoviesResponseSchema:
+        count = len(df)
+        if count == 0:
+            raise NotFoundException("По вашему запросу ничего не найдено")
+
+        df = self._pagination_apply(df, pagination)
+        movies = self._validate_dataframe(df)
+        return MoviesResponseSchema(
+            movies=movies, pagination=pagination, totalMovies=count
+        )
+
     @staticmethod
-    def _validate_dataframe(df) -> list[MovieReadSchema]:
+    def _validate_dataframe(df: DataFrame) -> list[MovieReadSchema]:
         movie_list = []
 
         for _, row in df.iterrows():
@@ -49,62 +86,16 @@ class MovieRepository:
 
         return movie_list
 
-    def search_by_title(
-        self, title: str, pagination: PaginationParams
-    ) -> MoviesResponseSchema:
-        filtered_df: Series = self.df[
-            self.df["title"].str.contains(title, case=False, na=False)
-        ]
-        count = len(filtered_df)
-
-        if pagination.page > count:
+    @staticmethod
+    def _pagination_apply(df: DataFrame, pagination: PaginationParams) -> DataFrame:
+        if pagination.page > len(df):
             raise BadRequestException("Дальше страниц нет")
 
-        filtered_df = filtered_df.iloc[
-            (pagination.page - 1) * pagination.limit :
-            pagination.limit + (pagination.page - 1) * pagination.limit
-        ]
-        movies = self._validate_dataframe(filtered_df)
-
-        return MoviesResponseSchema(movies=movies, pagination=pagination, totalMovies=count)
-
-    def search_by_genre(
-        self, genre: str, pagination: PaginationParams
-    ) -> MoviesResponseSchema:
-        filtered_df: Series = self.df[
-            self.df["genres"].str.contains(genre, case=False, na=False)
-        ]
-        count = len(filtered_df)
-
-        if pagination.page > count:
-            raise BadRequestException("Дальше страниц нет")
-
-        filtered_df = filtered_df.iloc[
-                      (pagination.page - 1) * pagination.limit:
-                      pagination.limit + (pagination.page - 1) * pagination.limit
-                      ]
-        movies = self._validate_dataframe(filtered_df)
-
-        return MoviesResponseSchema(movies=movies, pagination=pagination, totalMovies=count)
-
-    def search_by_actor(
-        self, actor: str, pagination: PaginationParams
-    ) -> MoviesResponseSchema:
-        filtered_df: Series = self.df[
-            self.df["actors"].str.contains(actor, case=False, na=False)
-        ]
-        count = len(filtered_df)
-
-        if pagination.page > count:
-            raise BadRequestException("Дальше страниц нет")
-
-        filtered_df = filtered_df.iloc[
-                      (pagination.page - 1) * pagination.limit:
-                      pagination.limit + (pagination.page - 1) * pagination.limit
-                      ]
-        movies = self._validate_dataframe(filtered_df)
-
-        return MoviesResponseSchema(movies=movies, pagination=pagination, totalMovies=count)
+        df = df.iloc[
+             (pagination.page - 1) * pagination.limit: pagination.limit
+                                                       + (pagination.page - 1) * pagination.limit
+             ]
+        return df
 
 
 movie_db = MovieRepository(movies_path=settings.movie.movie_data)

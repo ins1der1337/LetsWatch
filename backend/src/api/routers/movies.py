@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from api.dependencies import PaginationDep, FiltersDep
+from api.dependencies import PaginationDep
 from api.services.movies import movie_db
 from core.schemas.movies import MoviesResponseSchema
 
@@ -30,7 +30,7 @@ async def get_movie_by_title(genre: str, pagination: PaginationDep):
 
 
 @router.get("/search-by-actor/{actor}", response_model=MoviesResponseSchema)
-async def get_movie_by_title(actor: str, pagination: PaginationDep):
+async def get_movie_by_actor(actor: str, pagination: PaginationDep):
     """
     Запрос для получения фильмов по актеру
 
