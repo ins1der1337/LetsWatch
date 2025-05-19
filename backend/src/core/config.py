@@ -13,12 +13,6 @@ class RunApiConfig(BaseModel):
     port: int = 8000
 
 
-class BotConfig(BaseModel):
-    """Конфигурация Телеграм-бота"""
-
-    token: str
-
-
 class AppDBConfig(BaseModel):
     """Конфигурация БД нашего приложения"""
 
@@ -30,7 +24,6 @@ class Settings(BaseSettings):
     """Общая конфигурация"""
 
     api: RunApiConfig = RunApiConfig()
-    bot: BotConfig
     db: AppDBConfig
 
     model_config = SettingsConfigDict(

@@ -43,5 +43,9 @@ class DataBaseHelper:
     async def dispose(self) -> None:
         await self._engine.dispose()
 
+    @property
+    async def get_engine(self):
+        return self._engine
+
 
 db_helper = DataBaseHelper(url=str(settings.db.url), echo=int(settings.db.echo))
