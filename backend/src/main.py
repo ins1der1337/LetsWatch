@@ -9,7 +9,7 @@ from api.dependencies import DbSession
 from api.exceptions import AppException
 from api.routers import main_router
 from core.config import settings
-from core.database import db_helper
+from core.database import db_helper, admin
 
 
 @asynccontextmanager
@@ -29,6 +29,8 @@ app = FastAPI(
 )
 
 app.include_router(main_router)
+
+admin.mount_to(app)
 
 
 @app.exception_handler(AppException)

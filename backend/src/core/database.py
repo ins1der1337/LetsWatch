@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import mapped_column, Mapped, DeclarativeBase
 from sqlalchemy.types import Integer, DateTime
+from starlette_admin.contrib.sqla import Admin
 
 from core.config import settings
 
@@ -44,8 +45,9 @@ class DataBaseHelper:
         await self._engine.dispose()
 
     @property
-    async def get_engine(self):
+    def get_engine(self):
         return self._engine
 
 
 db_helper = DataBaseHelper(url=str(settings.db.url), echo=int(settings.db.echo))
+admin = Admin(db_helper.get_engine, title="База данных")

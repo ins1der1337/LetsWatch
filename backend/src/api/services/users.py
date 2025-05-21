@@ -1,12 +1,12 @@
 from typing import Sequence
 
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.exceptions import NotFoundException, BadRequestException
+from core.models import User
 from core.schemas.movies import PaginationParams
 from core.schemas.users import UserCreateSchema
-from core.models import User
 
 
 class UserRepository:

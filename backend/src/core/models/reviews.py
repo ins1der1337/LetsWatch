@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.schema import ForeignKey, UniqueConstraint
-
-from core.database import Base
+from starlette_admin.contrib.sqla import ModelView
+from core.database import Base, admin
 
 
 class Review(Base):
@@ -12,3 +12,6 @@ class Review(Base):
     rating: Mapped[int]
 
     __table_args__ = (UniqueConstraint("tg_id", "movie_id", name="uq_tg_id_movie_id"),)
+
+
+admin.add_view(ModelView(Review))

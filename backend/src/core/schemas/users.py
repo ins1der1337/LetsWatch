@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
+from core.schemas.movies import PaginationParams
+
 
 class UserCreateSchema(BaseModel):
     username: str
@@ -20,4 +22,4 @@ class UserReadSchema(UserCreateSchema):
 
 class UserResponseSchema(BaseModel):
     users: list[UserReadSchema]
-    # total_users: int
+    pagination: PaginationParams

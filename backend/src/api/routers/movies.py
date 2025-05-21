@@ -10,7 +10,7 @@ router = APIRouter(prefix="/movies", tags=["Фильмы"])
 
 
 @router.get("", response_model=MoviesResponseSchema)
-async def get_movie_by_title(
+async def get_movies(
     pagination: PaginationDep,
     title: Optional[str] = Query(None, description="Поиск фильмов по названию"),
     genre: Optional[str] = Query(None, description="Поиск фильмов по жанру"),
