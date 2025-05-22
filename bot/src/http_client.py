@@ -39,7 +39,7 @@ class ApiClient:
             params["title"] = title
 
         async with self._session.get("movies", params=params) as response:
-            return response.json()
+            return await response.json()
 
 
     @property

@@ -10,6 +10,14 @@ LEXICON = {
     
     'search': (
         "🔍 <b>Выберите тип поиска:</b>"
+    ),
+
+    'movie_card': (
+        "<b>{movie['title']} ({movie['year']})</b>\n"
+        "🎬 Режиссер: {movie['director']}\n"
+        "👥 Актеры: {', '.join(movie['actors'])}\n"
+        "🏷 Жанры: {', '.join(movie['genres'])}\n"
+        "\n{movie['description']}"
     )
 }
           

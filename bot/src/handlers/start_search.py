@@ -7,11 +7,14 @@ from handlers.lexicon import LEXICON
 from aiogram.types import FSInputFile
 from aiogram.filters import StateFilter
 
-from keyboards.inline import get_main_menu_keyboard, get_search_type_keyboard
+from keyboards.inline import get_main_menu_keyboard, get_search_type_keyboard, get_pagination_keyboard
 
 from http_client import api_client
 
 router = Router()
+
+MOVIES_PER_PAGE = 5
+
 
 class SearchState(StatesGroup):
     waiting_for_title = State()
@@ -101,15 +104,51 @@ async def process_search_input(message: types.Message, state: FSMContext):
     if not result:
         await message.answer("Ничего не найдено.")
     else:
-        for movie in result:
-            # Отправляем краткую инфу по каждому фильму
-            print("мяу")
-            title = movie.get("title", "Без названия")
-            year = movie.get("year", "неизвестен")
-            await message.answer(f"<b>{title}</b> ({year})", parse_mode='HTML')
+        await message.answer(str(result))  # ссыль на пагинацию 
+        # for movie in result:
+        #     # Отправляем краткую инфу по каждому фильму
+        #     print("мяу")
+        #     title = movie.get("title", "Без названия")
+        #     year = movie.get("year", "неизвестен")
+        #     await message.answer(f"<b>{title}</b> ({year})", parse_mode='HTML')
 
     await state.clear()
 
+
+# ++++++++++++++++++++++++++++
+def format_movie(movie: dict) -> str:
+    return LEXICON['movie_card']
+
+
+@router.callback_query(F.data.startswith("page_"))
+async def page_callback(callback: types.CallbackQuery, state: FSMContext):
+    page = int(callback.data.split("_")[1])
+
+    # Получаем сохранённый результат поиска из FSM-состояния
+    data = await state.get_data()
+    result = data.get("search_result")
+
+    if not result:
+        await callback.answer("Результаты не найдены", show_alert=True)
+        return
+
+    movies = result["movies"]
+    total_movies = result["totalMovies"]
+    page_size = result["pagination"]["limit"]
+    total_pages = (total_movies + page_size - 1) // page_size
+
+    start = (page - 1) * page_size
+    end = start + page_size
+    movie = movies[start:end][0]
+
+    def get_keyboard():
+        kb = InlineKeyboardBuilder()
+        if page > 1:
+            kb.button(text="◀️ Назад", callback_data=f"page_{page - 1}")
+        if page < total_pages:
+            kb.button(text="Вперед ▶️", callback_data=f"page_{page + 1}")
+        return kb.as_markup()
+# +++++++++++++++++++++++++++
 
 # === Поиск по названию фильма ===
 '''@router.message(SearchState.waiting_for_title)
