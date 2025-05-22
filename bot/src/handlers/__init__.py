@@ -1,5 +1,5 @@
 from aiogram import Router
-from bot.src.handlers.start_search import router as start_router
+from handlers.start_search import router as start_router
 
 
 router = Router()
