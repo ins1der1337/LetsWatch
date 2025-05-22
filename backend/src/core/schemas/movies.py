@@ -8,7 +8,7 @@ class MovieReadSchema(BaseModel):
     movieId: int
     title: str = Field(max_length=64)
     genres: list[str]
-    description: str = Field(None, max_length=1024)
+    description: str
     year: int = Field(gt=0)
     poster_url: str
     director: str = Field(max_length=32)

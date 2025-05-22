@@ -3,6 +3,8 @@ from typing import Optional
 
 import pandas as pd
 from pandas.core.frame import DataFrame
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import NearestNeighbors
 
 from api.exceptions import BadRequestException, NotFoundException
 from core.config import settings
@@ -19,30 +21,6 @@ class MovieRepository:
         self.df = self.df.drop_duplicates(subset=["tmdbId", "title"])
         self.df = self.df.reset_index(drop=True)
         self.df = self.df.drop(columns=["Unnamed: 0", "tmdbId"])
-
-    def search_movies(
-        self,
-        pagination: PaginationParams,
-        title: Optional[str] = None,
-        genre: Optional[str] = None,
-        actor: Optional[str] = None,
-    ):
-        temp_df = self.df.copy()
-
-        if title:
-            temp_df = temp_df[
-                temp_df["title"].str.contains(title, case=False, na=False)
-            ]
-        if genre:
-            temp_df = temp_df[
-                temp_df["genres"].str.contains(genre, case=False, na=False)
-            ]
-        if actor:
-            temp_df = temp_df[
-                temp_df["actors"].str.contains(actor, case=False, na=False)
-            ]
-
-        return self._process_movie_response(temp_df, pagination)
 
     def _process_movie_response(
         self, df: DataFrame, pagination: PaginationParams
@@ -99,4 +77,139 @@ class MovieRepository:
         return df
 
 
-movie_db = MovieRepository(movies_path=settings.movie.movie_data)
+class SearchModelRepository(MovieRepository):
+
+    def __init__(self, movies_path: Path):
+        super().__init__(movies_path)
+
+    def search_movies(
+        self,
+        pagination: PaginationParams,
+        title: Optional[str] = None,
+        genre: Optional[str] = None,
+        actor: Optional[str] = None,
+    ) -> MoviesResponseSchema:
+        temp_df = self.df.copy()
+
+        if title:
+            temp_df = temp_df[
+                temp_df["title"].str.contains(title, case=False, na=False)
+            ]
+        if genre:
+            temp_df = temp_df[
+                temp_df["genres"].str.contains(genre, case=False, na=False)
+            ]
+        if actor:
+            temp_df = temp_df[
+                temp_df["actors"].str.contains(actor, case=False, na=False)
+            ]
+
+        return self._process_movie_response(temp_df, pagination)
+
+
+# class RecommendModelRepository(MovieRepository):
+#
+#     def __init__(self, movies_path: Path):
+#         super().__init__(movies_path)
+#
+#     @staticmethod
+#     def _combine_features(row):
+#         return " ".join(
+#             [
+#                 str(row["genres"]),
+#                 str(row["actors"]),
+#                 str(row["director"]),
+#             ]
+#         )
+#
+#     def _prepare_model(self):
+#         temp_df = self.df.copy()
+#         temp_df = temp_df.dropna(
+#             subset=["genres", "actors", "director", "description"]
+#         ).copy()
+#         temp_df["combined"] = temp_df.apply(combine_features, axis=1)
+#
+#         # Векторизация признаков (TF-IDF)
+#         vectorizer = TfidfVectorizer(stop_words="english", max_features=10000)
+#         tfidf_matrix = vectorizer.fit_transform(temp_df["combined"])
+#
+#         # Модель ближайших соседей
+#         nn_model = NearestNeighbors(metric="cosine", algorithm="brute")
+#         nn_model.fit(tfidf_matrix)
+#
+#         return temp_df, tfidf_matrix, nn_model, vectorizer
+#
+#     def recommend_movies_by_title(
+#         self,
+#         title: str,
+#         df: DataFrame,
+#         tfidf_matrix,
+#         nn_model,
+#         vectorizer,
+#         pagination: PaginationParams,
+#     ) -> MoviesResponseSchema:
+#         # if not df["title"].isin([title]).any():
+#         #     raise f"Фильм '{title}' не найден."
+#
+#         idx = df[df["title"] == title].index[0]
+#         distances, indices = nn_model.kneighbors(
+#             tfidf_matrix[idx], n_neighbors=pagination.limit + 1
+#         )
+#
+#         # Исключаем сам фильм (первый)
+#         similar_indices = indices[0][1:]
+#         recommended_movies_df = df.iloc[similar_indices]
+#         return recommended_movies_df.to_json(
+#             orient="records", force_ascii=False, indent=4
+#         )
+
+
+search_model = SearchModelRepository(movies_path=settings.movie.movie_data)
+# recommend_model = RecommendModelRepository(movies_path=settings.movie.movie_data)
+
+
+# def combine_features(row):
+#     return " ".join(
+#         [
+#             str(row["genres"]),
+#             str(row["actors"]),
+#             str(row["director"]),
+#         ]
+#     )
+#
+#
+# # Подготовка модели
+# def prepare_model(df):
+#     df = df.dropna(subset=["genres", "actors", "director", "description"]).copy()
+#     df["combined"] = df.apply(combine_features, axis=1)
+#
+#     # Векторизация признаков (TF-IDF)
+#     vectorizer = TfidfVectorizer(stop_words="english", max_features=10000)
+#     tfidf_matrix = vectorizer.fit_transform(df["combined"])
+#
+#     # Модель ближайших соседей
+#     nn_model = NearestNeighbors(metric="cosine", algorithm="brute")
+#     nn_model.fit(tfidf_matrix)
+#
+#     return df, tfidf_matrix, nn_model, vectorizer
+#
+#
+# # Поиск похожих фильмов по названию
+# def recommend_by_title(title, df, tfidf_matrix, nn_model, vectorizer, n=5):
+#     if not df["title"].isin([title]).any():
+#         return f"Фильм '{title}' не найден."
+#
+#     idx = df[df["title"] == title].index[0]
+#     distances, indices = nn_model.kneighbors(tfidf_matrix[idx], n_neighbors=n + 1)
+#
+#     # Исключаем сам фильм (первый)
+#     similar_indices = indices[0][1:]
+#     recommended_movies_df = df.iloc[similar_indices]
+#     return recommended_movies_df.to_json(orient="records", force_ascii=False, indent=4)
+#
+#
+# df, tfidf_matrix, nn_model, vectorizer = prepare_model(df)
+#
+# # Получить рекомендации
+# recommendations = recommend_by_title("Toy Story", *prepare_model(df))
+# print(recommendations)

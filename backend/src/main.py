@@ -1,9 +1,13 @@
+import os
+import sys
 from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import ORJSONResponse
 from sqlalchemy import text
+
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 from api.dependencies import DbSession
 from api.exceptions import AppException

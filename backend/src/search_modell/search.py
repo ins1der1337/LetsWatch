@@ -13,7 +13,6 @@ df: DataFrame = pd.read_csv(movies_path, encoding="utf-8")
 df = df.drop_duplicates(subset=["tmdbId", "title"])
 df = df.reset_index(drop=True)
 df = df.drop(columns=["Unnamed: 0", "tmdbId"])
-print(df.head())
 
 
 def search_by_name(title: str):
@@ -34,14 +33,13 @@ def combine_features(row):
             str(row["genres"]),
             str(row["actors"]),
             str(row["director"]),
-            str(row["description"]),
         ]
     )
 
 
 # Подготовка модели
 def prepare_model(df):
-    df = df.dropna(subset=["genres", "actors", "director", "description"])
+    df = df.dropna(subset=["genres", "actors", "director", "description"]).copy()
     df["combined"] = df.apply(combine_features, axis=1)
 
     # Векторизация признаков (TF-IDF)
@@ -65,7 +63,7 @@ def recommend_by_title(title, df, tfidf_matrix, nn_model, vectorizer, n=5):
 
     # Исключаем сам фильм (первый)
     similar_indices = indices[0][1:]
-    recommended_movies_df = df.iloc[similar_indices][["title", "genres"]]
+    recommended_movies_df = df.iloc[similar_indices]
     return recommended_movies_df.to_json(orient="records", force_ascii=False, indent=4)
 
 

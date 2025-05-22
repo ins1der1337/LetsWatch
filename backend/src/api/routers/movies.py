@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Query
 
 from api.dependencies import PaginationDep
-from api.services.movies import movie_db
+from api.services.movies import search_model
 from core.schemas.movies import MoviesResponseSchema
 
 router = APIRouter(prefix="/movies", tags=["Фильмы"])
@@ -24,5 +24,5 @@ async def get_movies(
 
     totalMovies: выводит количество всех найденных фильмов (изменять page можно до этого числа, иначе будет ошибка)
     """
-    res = movie_db.search_movies(pagination, title, genre, actor)
+    res = search_model.search_movies(pagination, title, genre, actor)
     return res
