@@ -217,38 +217,38 @@ async def handle_movie_search(message: types.Message, state: FSMContext):
     title = message.text.strip()
     results = search_by_name(title)
 
-    if results.empty:
-        await message.answer("Фильмы не найдены.")
-    else:
-        for _, row in results.iterrows():
-            text = f"🎬 <b>{row['title']}</b> ({row['year']})\n" \
-                   f"Жанры: {row['genres']}\n" \
-                   f"Рейтинг: ⭐ {row['rating']}"
-            await message.answer(text)
+#     if results.empty:
+#         await message.answer("Фильмы не найдены.")
+#     else:
+#         for _, row in results.iterrows():
+#             text = f"🎬 <b>{row['title']}</b> ({row['year']})\n" \
+#                    f"Жанры: {row['genres']}\n" \
+#                    f"Рейтинг: ⭐ {row['rating']}"
+#             await message.answer(text)
 
-            # Предложить рекомендации
-            recommendations = recommend_by_title(row['title'])
-            if not recommendations is None:
-                await message.answer("Попробуйте посмотреть:")
-                for _, rec in recommendations.iterrows():
-                    await message.answer(f"👉 {rec['title']} — {rec['genres']}")
+#             # Предложить рекомендации
+#             recommendations = recommend_by_title(row['title'])
+#             if not recommendations is None:
+#                 await message.answer("Попробуйте посмотреть:")
+#                 for _, rec in recommendations.iterrows():
+#                     await message.answer(f"👉 {rec['title']} — {rec['genres']}")
 
-    await state.clear()
+#     await state.clear()
 
 
-# === Поиск по актёру ===
-@router.message(SearchState.waiting_for_actor)
-async def handle_actor_search(message: types.Message, state: FSMContext):
-    actor = message.text.strip()
-    results = search_by_actor(actor)
+# # === Поиск по актёру ===
+# @router.message(SearchState.waiting_for_actor)
+# async def handle_actor_search(message: types.Message, state: FSMContext):
+#     actor = message.text.strip()
+#     # results = search_by_actor(actor)
 
-    if results.empty:
-        await message.answer("Фильмы с этим актёром не найдены.")
-    else:
-        for _, row in results.iterrows():
-            text = f"🎬 <b>{row['title']}</b> ({row['year']})\n" \
-                   f"Актёры: {row['actors']}\n" \
-                   f"Рейтинг: ⭐ {row['rating']}"
-            await message.answer(text)
+#     if results.empty:
+#         await message.answer("Фильмы с этим актёром не найдены.")
+#     else:
+#         for _, row in results.iterrows():
+#             text = f"🎬 <b>{row['title']}</b> ({row['year']})\n" \
+#                    f"Актёры: {row['actors']}\n" \
+#                    f"Рейтинг: ⭐ {row['rating']}"
+#             await message.answer(text)
 
     await state.clear()"""
