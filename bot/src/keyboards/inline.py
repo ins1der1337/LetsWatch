@@ -26,7 +26,7 @@ def get_search_type_keyboard() -> InlineKeyboardMarkup:
     return keyboard
 
 
-def get_pagination_keyboard(current_page, total_pages=5):
+def get_pagination_keyboard(current_page, total_pages=5, movie_id=1):
     buttons = []
     if current_page >= 1:
         buttons.append(
@@ -40,14 +40,22 @@ def get_pagination_keyboard(current_page, total_pages=5):
                 text="Вперед ▶️", callback_data=f"page_{current_page + 1}"
             )
         )
-    
+
     # Первый ряд — кнопки "Назад" и "Вперед"
     keyboard = [buttons] if buttons else []
 
     # Второй ряд — кнопка "Меню" по центру
-    keyboard.append([
-        InlineKeyboardButton(
-            text="🏠 Меню", callback_data="search"
-        )
-    ])
+    keyboard.append(
+        [
+            InlineKeyboardButton(text="🏠 Меню", callback_data="search",),
+            InlineKeyboardButton(text="⭐ Оценить", callback_data=f"rate_{movie_id}",),
+        ]
+    )
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def menu():
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="🏠 Меню", callback_data="search")]]
+    )
+    return keyboard

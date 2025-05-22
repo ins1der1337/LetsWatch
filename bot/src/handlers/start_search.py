@@ -13,6 +13,7 @@ from keyboards.inline import (
     get_main_menu_keyboard,
     get_search_type_keyboard,
     get_pagination_keyboard,
+    menu,
 )
 
 from http_client import api_client
@@ -41,6 +42,7 @@ async def cmd_start(message: types.Message):
         parse_mode="HTML",
     )
 
+
 RATE_KEYBOARD = ReplyKeyboardMarkup(
     keyboard=[
         [
@@ -48,31 +50,27 @@ RATE_KEYBOARD = ReplyKeyboardMarkup(
             KeyboardButton(text="😏"),
             KeyboardButton(text="😐"),
             KeyboardButton(text="😒"),
-            KeyboardButton(text="🤮🤢💩")
+            KeyboardButton(text="🤮🤢💩"),
         ]
     ],
     resize_keyboard=True,
-    one_time_keyboard=True
+    one_time_keyboard=True,
 )
 
 # Сопоставление эмодзи с числовой оценкой
-RATING_MAP = {
-    "😍": 5,
-    "😏": 4,
-    "😐": 3,
-    "😒": 2,
-    "🤮🤢💩": 1
-}
+RATING_MAP = {"😍": 5, "😏": 4, "😐": 3, "😒": 2, "🤮🤢💩": 1}
 
 
-@router.message(Command("rate"))
-async def cmd_rate(message: types.Message, state: FSMContext):
-    # Предположим, что movie_id берётся из контекста или предыдущего действия
-    # В реальности ты можешь получать его при показе фильма
-    movie_id = 589  # ← замени это на динамическое значение из твоей логики
+@router.callback_query(F.data.startswith("rate_"))
+async def rate_callback(callback: types.CallbackQuery, state: FSMContext):
+    movie_id = int(callback.data.split("_")[1])
+    print(movie_id)
+    await state.update_data(movie_id=movie_id)
 
-    await state.update_data(movie_id=movie_id)  # сохраняем в FSM
-    await message.answer("Оцените фильм:", reply_markup=RATE_KEYBOARD)
+    await callback.message.answer(
+        "Оцените фильм:", reply_markup=RATE_KEYBOARD  # тут твоя клавиатура с оценками
+    )
+    await callback.answer()
 
 
 @router.message(lambda msg: msg.text in RATING_MAP.keys())
@@ -87,15 +85,18 @@ async def handle_rating(message: types.Message, state: FSMContext):
         return
 
     try:
-        result = await api_client.send_rating(tg_id=tg_id, movie_id=movie_id, rating=rating)
-        await message.answer("Спасибо за оценку!")
+        result = await api_client.send_rating(
+            tg_id=tg_id, movie_id=movie_id, rating=rating
+        )
+        await message.answer("Спасибо за оценку!", reply_markup=menu())
         print("Результат оценки:", result)
     except Exception as e:
         await message.answer("Не удалось сохранить оценку.")
         print("Ошибка при отправке оценки:", e)
 
     await state.clear()
-    
+
+
 @router.message(Command("history"))
 async def cmd_history(message: types.Message):
     tg_id = message.from_user.id
@@ -128,7 +129,8 @@ async def cmd_history(message: types.Message):
     except Exception as e:
         await message.answer("Ошибка при загрузке истории оценок.")
         print("Ошибка при получении истории:", e)
-        
+
+
 @router.message(Command("help"))
 async def cmd_help(message: types.Message):
     help_text = (
@@ -139,6 +141,7 @@ async def cmd_help(message: types.Message):
         "/help — Показать это меню"
     )
     await message.answer(help_text, parse_mode="HTML")
+
 
 # Команда и коллбек \search
 async def show_search_keyboard(target, state: FSMContext):
@@ -151,12 +154,20 @@ async def show_search_keyboard(target, state: FSMContext):
             LEXICON["search"], reply_markup=keyboard, parse_mode="HTML"
         )
         await target.answer()
+    await state.clear()
 
 
 # Обработчик на callback "search"
 @router.callback_query(lambda c: c.data == "search")
 async def cmd_search_callback(callback: types.CallbackQuery, state: FSMContext):
-    await show_search_keyboard(callback, state)
+    help_text = (
+        "📚 <b>Доступные команды:</b>\n\n"
+        "/start — Начать взаимодействие с ботом\n"
+        "/rate — Оценить текущий фильм\n"
+        "/history — Посмотреть историю своих оценок\n"
+        "/help — Показать это меню"
+    )
+    await callback.message.answer(help_text, parse_mode="HTML")
 
 
 # Обработчик на команду /search
@@ -166,10 +177,10 @@ async def cmd_search_command(message: types.Message, state: FSMContext):
 
 
 # === Callback выбора типа поиска ===
-@router.callback_query(lambda c: c.data in ["movie", "actor", "genre", "director"])
+@router.callback_query(lambda c: c.data in ["title", "actor", "genre", "director"])
 async def handle_search_type(callback: types.CallbackQuery, state: FSMContext):
     mapping = {
-        "movie": ("Введите название фильма:", SearchState.waiting_for_title),
+        "title": ("Введите название фильма:", SearchState.waiting_for_title),
         "actor": ("Введите имя актёра:", SearchState.waiting_for_actor),
         "genre": ("Введите жанр:", SearchState.waiting_for_genre),
         "director": ("Введите имя режиссёра:", SearchState.waiting_for_director),
@@ -228,29 +239,29 @@ async def process_search_input(message: types.Message, state: FSMContext):
     total_movies = result["totalMovies"]
     # total_pages = (total_movies + limit - 1) // limit
 
-    movie = result['movies'][0]  # Первый фильм
+    movie = result["movies"][0]  # Первый фильм
     print(movie)
 
-    description = ''
+    description = ""
     if movie.get("description"):
         description = movie["description"]
     if len(description) > 500:
         description = description[:497] + "..."
 
-    year = movie['year'] if movie['year'] else ''
+    year = movie["year"] if movie["year"] else ""
 
     print(page)
-    caption=LEXICON["movie_card"].format(
-                title=movie["title"],
-                year=year,
-                stars=round(movie['rating'])//2*'⭐️',
-                rating=round(movie['rating'], 2),
-                director=movie["director"],
-                actors=', '.join(movie["actors"]),
-                genres=', '.join(movie["genres"]),
-                description=description,
-            )
-    keyboard = get_pagination_keyboard(page, limit)
+    caption = LEXICON["movie_card"].format(
+        title=movie["title"],
+        year=year,
+        stars=round(movie["rating"]) // 2 * "⭐️",
+        rating=round(movie["rating"], 2),
+        director=movie["director"],
+        actors=", ".join(movie["actors"]),
+        genres=", ".join(movie["genres"]),
+        description=description,
+    )
+    keyboard = get_pagination_keyboard(page, limit, movie_id=movie["movieId"])
 
     await message.answer_photo(
         photo=movie["poster_url"],
@@ -280,15 +291,17 @@ async def page_callback(callback: types.CallbackQuery, state: FSMContext):
 
     movie = movies[page - 1]
 
-    keyboard = get_pagination_keyboard(page, total_pages=page_size)
-    
-    description = ''
+    keyboard = get_pagination_keyboard(
+        page, total_pages=page_size, movie_id=movie["movieId"]
+    )
+
+    description = ""
     if movie.get("description"):
         description = movie["description"]
     if len(description) > 500:
         description = description[:497] + "..."
-    
-    year = movie['year'] if movie['year'] else ''
+
+    year = movie["year"] if movie["year"] else ""
 
     await callback.message.edit_media(
         media=types.InputMediaPhoto(
@@ -296,11 +309,11 @@ async def page_callback(callback: types.CallbackQuery, state: FSMContext):
             caption=LEXICON["movie_card"].format(
                 title=movie["title"],
                 year=year,
-                stars=round(movie['rating'])//2*'⭐️',
-                rating=round(movie['rating'], 2),
+                stars=round(movie["rating"]) // 2 * "⭐️",
+                rating=round(movie["rating"], 2),
                 director=movie["director"],
-                actors=', '.join(movie["actors"]),
-                genres=', '.join(movie["genres"]),
+                actors=", ".join(movie["actors"]),
+                genres=", ".join(movie["genres"]),
                 description=description,
             ),
             parse_mode="HTML",
