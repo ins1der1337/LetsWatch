@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Query
 
 from api.dependencies import PaginationDep
-from api.services.movies import search_model
+from api.services.movies import search_model, recommend_model
 from core.schemas.movies import MoviesResponseSchema
 
 router = APIRouter(prefix="/movies", tags=["Фильмы"])
@@ -25,4 +25,16 @@ async def get_movies(
     totalMovies: выводит количество всех найденных фильмов (изменять page можно до этого числа, иначе будет ошибка)
     """
     res = search_model.search_movies(pagination, title, genre, actor)
+    return res
+
+
+@router.get("/{movie_title}/recommends", response_model=MoviesResponseSchema)
+async def get_recommend_movies_for_movie(
+    pagination: PaginationDep,
+    movie_title: str,
+):
+    """
+    Запрос для получения "похожих фильмов" по названию тайтла
+    """
+    res = recommend_model.recommend_movies_by_title(movie_title, pagination)
     return res
