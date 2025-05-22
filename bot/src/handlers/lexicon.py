@@ -1,5 +1,5 @@
 LEXICON = {
-    'start': (
+    "start": (
         "🎬<b>Добро пожаловать в кино-бота, {username}!</b>🍿\n\n"
         "Я помогу тебе найти идеальный фильм 😻\n\n"
         "🔍 <b>Что умею?</b>\n"
@@ -7,17 +7,13 @@ LEXICON = {
         "💡 <i>Просто напиши имя актёра, и я всё найду!</i>\n\n"
         "🎭 Готов к киномарафону? Поехали! 🚀"
     ),
-    
-    'search': (
-        "🔍 <b>Выберите тип поиска:</b>"
+    "search": ("🔍 <b>Выберите тип поиска:</b>"),
+    "movie_card": (
+        "<b>{title} ({year})</b>\n"
+        "<b>{stars} {rating}\n</b>"
+        "🎬 Режиссер: {director}\n"
+        "👥 Актеры: {actors}\n"
+        "🏷 Жанры: {genres}\n"
+        "\n{description}"
     ),
-
-    'movie_card': (
-        "<b>{movie['title']} ({movie['year']})</b>\n"
-        "🎬 Режиссер: {movie['director']}\n"
-        "👥 Актеры: {', '.join(movie['actors'])}\n"
-        "🏷 Жанры: {', '.join(movie['genres'])}\n"
-        "\n{movie['description']}"
-    )
 }
-          

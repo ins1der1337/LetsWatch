@@ -10,7 +10,7 @@ class ApiClient:
 
     async def create_session(self):
         if self._session is None:
-            self._session = ClientSession(base_url=f'{self._base_url}/')
+            self._session = ClientSession(base_url=f"{self._base_url}/")
 
     async def close_session(self):
         if self._session and not self._session.closed:
@@ -23,13 +23,15 @@ class ApiClient:
         ) as response:
             res = await response.json()
             return res
-    
-    async def search_movie(self, actor: Optional[str] = None, genre: Optional[str] = None, title: Optional[str] = None):
 
-        params = {
-            "limit": 5,
-            "page": 1
-        }
+    async def search_movie(
+        self,
+        actor: Optional[str] = None,
+        genre: Optional[str] = None,
+        title: Optional[str] = None,
+    ):
+
+        params = {"limit": 5, "page": 1}
 
         if actor:
             params["actor"] = actor
@@ -40,7 +42,6 @@ class ApiClient:
 
         async with self._session.get("movies", params=params) as response:
             return await response.json()
-
 
     @property
     def session(self):
