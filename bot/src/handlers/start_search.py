@@ -158,6 +158,7 @@ async def process_search_input(message: types.Message, state: FSMContext):
         parse_mode="HTML",
         reply_markup=keyboard,
     )
+    # await state.clear()
 
 
 # ++++++++++++++++++++++++++++
