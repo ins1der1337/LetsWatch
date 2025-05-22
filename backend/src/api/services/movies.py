@@ -22,6 +22,7 @@ class MovieRepository:
         self.df = self.df.drop_duplicates(subset=["tmdbId", "title"])
         self.df = self.df.reset_index(drop=True)
         self.df = self.df.drop(columns=["Unnamed: 0", "tmdbId"])
+        self.df = self.df.sort_values(by=["rating"], ascending=False)
 
     def _process_movie_response(
         self, df: DataFrame, pagination: PaginationParams
@@ -58,6 +59,7 @@ class MovieRepository:
                     str(row["description"]) if pd.notna(row["description"]) else None
                 ),
                 "year": int(row["year"]),
+                "rating": float(row["rating"]),
                 "poster_url": row["poster_url"],
                 "director": row["director"],
                 "actors": [actor.strip() for actor in row["actors"].split(",")],
@@ -89,7 +91,7 @@ class SearchModelRepository(MovieRepository):
         title: Optional[str] = None,
         genre: Optional[str] = None,
         actor: Optional[str] = None,
-        director: Optional[str] = None
+        director: Optional[str] = None,
     ) -> MoviesResponseSchema:
         temp_df = self.df.copy()
 
