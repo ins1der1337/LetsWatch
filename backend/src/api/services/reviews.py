@@ -5,7 +5,7 @@ from sqlalchemy import insert, select
 
 from api.exceptions import NotFoundException, BadRequestException
 from api.services.users import UserRepository
-from core.models import Review
+from core.models import Review, User
 from core.schemas.reviews import ReviewCreateSchema
 
 
@@ -20,10 +20,7 @@ class ReviewsRepository:
         review_data: ReviewCreateSchema,
     ) -> Review:
 
-        user = await session.scalar(select(Review).where(Review.tg_id == tg_id))
-
-        if not user:
-            raise NotFoundException("Пользователь не найден в базе данных")
+        user = await UserRepository.get_user_by_tg_id(session, tg_id)
 
         review = await session.scalar(
             select(Review)
