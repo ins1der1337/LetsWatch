@@ -11,7 +11,7 @@ class MovieReadSchema(BaseModel):
     description: str
     year: int = Field(gt=0)
     poster_url: str
-    director: str = Field(max_length=32)
+    director: str = Field(max_length=64)
     actors: list[str]
 
 

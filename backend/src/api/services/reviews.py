@@ -20,6 +20,14 @@ class ReviewsRepository:
         review_data: ReviewCreateSchema,
     ) -> Review:
 
+        user = await session.scalar(
+            select(Review)
+            .where(Review.tg_id == tg_id)
+        )
+
+        if not user:
+            raise NotFoundException("Пользователь не найден в базе данных")
+
         review = await session.scalar(
             select(Review)
             .where(Review.tg_id == tg_id, Review.movie_id == movie_id)

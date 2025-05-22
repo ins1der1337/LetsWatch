@@ -15,6 +15,7 @@ async def get_movies(
     title: Optional[str] = Query(None, description="Поиск фильмов по названию"),
     genre: Optional[str] = Query(None, description="Поиск фильмов по жанру"),
     actor: Optional[str] = Query(None, description="Поиск фильмов по актеру"),
+    director: Optional[str] = Query(None, description="Поиск фильмов по режиссеру"),
 ):
     """
     Запрос для получения фильма по:
@@ -24,17 +25,17 @@ async def get_movies(
 
     totalMovies: выводит количество всех найденных фильмов (изменять page можно до этого числа, иначе будет ошибка)
     """
-    res = search_model.search_movies(pagination, title, genre, actor)
+    res = search_model.search_movies(pagination, title, genre, actor, director)
     return res
 
 
-@router.get("/{movie_title}/recommends", response_model=MoviesResponseSchema)
-async def get_recommend_movies_for_movie(
+@router.get("/{title}/recommends", response_model=MoviesResponseSchema)
+async def get_recommend_movies_for_title(
     pagination: PaginationDep,
-    movie_title: str,
+    title: str,
 ):
     """
     Запрос для получения "похожих фильмов" по названию тайтла
     """
-    res = recommend_model.recommend_movies_by_title(movie_title, pagination)
+    res = recommend_model.recommend_movies_by_title(title, pagination)
     return res

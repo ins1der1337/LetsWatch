@@ -89,6 +89,7 @@ class SearchModelRepository(MovieRepository):
         title: Optional[str] = None,
         genre: Optional[str] = None,
         actor: Optional[str] = None,
+        director: Optional[str] = None
     ) -> MoviesResponseSchema:
         temp_df = self.df.copy()
 
@@ -103,6 +104,10 @@ class SearchModelRepository(MovieRepository):
         if actor:
             temp_df = temp_df[
                 temp_df["actors"].str.contains(actor, case=False, na=False)
+            ]
+        if director:
+            temp_df = temp_df[
+                temp_df["director"].str.contains(director, case=False, na=False)
             ]
 
         return self._process_movie_response(temp_df, pagination)
@@ -171,7 +176,7 @@ class RecommendModelRepository(MovieRepository):
 
         distances, indices = self._nn_model.kneighbors(
             self._tfidf_matrix[movie_index_in_recommend_df],
-            n_neighbors=pagination.limit + 1,
+            n_neighbors=100 + 1,
         )
 
         similar_indices = indices[0][1:]
@@ -188,50 +193,3 @@ class RecommendModelRepository(MovieRepository):
 
 search_model = SearchModelRepository(movies_path=settings.movie.movie_data)
 recommend_model = RecommendModelRepository(movies_path=settings.movie.movie_data)
-
-
-# def combine_features(row):
-#     return " ".join(
-#         [
-#             str(row["genres"]),
-#             str(row["actors"]),
-#             str(row["director"]),
-#         ]
-#     )
-#
-#
-# # Подготовка модели
-# def prepare_model(df):
-#     df = df.dropna(subset=["genres", "actors", "director", "description"]).copy()
-#     df["combined"] = df.apply(combine_features, axis=1)
-#
-#     # Векторизация признаков (TF-IDF)
-#     vectorizer = TfidfVectorizer(stop_words="english", max_features=10000)
-#     tfidf_matrix = vectorizer.fit_transform(df["combined"])
-#
-#     # Модель ближайших соседей
-#     nn_model = NearestNeighbors(metric="cosine", algorithm="brute")
-#     nn_model.fit(tfidf_matrix)
-#
-#     return df, tfidf_matrix, nn_model, vectorizer
-#
-#
-# # Поиск похожих фильмов по названию
-# def recommend_by_title(title, df, tfidf_matrix, nn_model, vectorizer, n=5):
-#     if not df["title"].isin([title]).any():
-#         return f"Фильм '{title}' не найден."
-#
-#     idx = df[df["title"] == title].index[0]
-#     distances, indices = nn_model.kneighbors(tfidf_matrix[idx], n_neighbors=n + 1)
-#
-#     # Исключаем сам фильм (первый)
-#     similar_indices = indices[0][1:]
-#     recommended_movies_df = df.iloc[similar_indices]
-#     return recommended_movies_df.to_json(orient="records", force_ascii=False, indent=4)
-#
-#
-# df, tfidf_matrix, nn_model, vectorizer = prepare_model(df)
-#
-# # Получить рекомендации
-# recommendations = recommend_by_title("Toy Story", *prepare_model(df))
-# print(recommendations)
