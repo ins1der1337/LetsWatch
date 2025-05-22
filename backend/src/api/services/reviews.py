@@ -5,7 +5,7 @@ from sqlalchemy import insert, select
 
 from api.exceptions import NotFoundException, BadRequestException
 from api.services.users import UserRepository
-from core.models import Review
+from core.models import Review, User
 from core.schemas.reviews import ReviewCreateSchema
 
 
@@ -19,6 +19,8 @@ class ReviewsRepository:
         movie_id: int,
         review_data: ReviewCreateSchema,
     ) -> Review:
+
+        user = await UserRepository.get_user_by_tg_id(session, tg_id)
 
         review = await session.scalar(
             select(Review)
