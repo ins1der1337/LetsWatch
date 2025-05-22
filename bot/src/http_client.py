@@ -24,7 +24,7 @@ class ApiClient:
             res = await response.json()
             return res
 
-    async def search_movie(
+    async def ssearch_movie(
         self,
         actor: Optional[str] = None,
         genre: Optional[str] = None,
@@ -47,5 +47,15 @@ class ApiClient:
     def session(self):
         return self._session
 
+    async def send_rating(self, tg_id: int, movie_id: int, rating: int) -> dict:
+        url = f"users/{tg_id}/reviews/{movie_id}"
+        payload = {"rating": rating}
+        async with self._session.post(url, json=payload) as response:
+            return await response.json()
+        
+    async def get_user_reviews(self, tg_id: int):
+        url = f"users/{tg_id}/reviews"
+        async with self._session.get(url) as response:
+            return await response.json()
 
 api_client = ApiClient(base_url=settings.api.url)

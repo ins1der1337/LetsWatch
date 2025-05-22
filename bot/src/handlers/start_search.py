@@ -6,6 +6,8 @@ from aiogram.fsm.state import State, StatesGroup
 from handlers.lexicon import LEXICON
 from aiogram.types import FSInputFile
 from aiogram.filters import StateFilter
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from http_client import api_client
 
 from keyboards.inline import (
     get_main_menu_keyboard,
@@ -39,6 +41,104 @@ async def cmd_start(message: types.Message):
         parse_mode="HTML",
     )
 
+RATE_KEYBOARD = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text="😍"),
+            KeyboardButton(text="😏"),
+            KeyboardButton(text="😐"),
+            KeyboardButton(text="😒"),
+            KeyboardButton(text="🤮🤢💩")
+        ]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)
+
+# Сопоставление эмодзи с числовой оценкой
+RATING_MAP = {
+    "😍": 5,
+    "😏": 4,
+    "😐": 3,
+    "😒": 2,
+    "🤮🤢💩": 1
+}
+
+
+@router.message(Command("rate"))
+async def cmd_rate(message: types.Message, state: FSMContext):
+    # Предположим, что movie_id берётся из контекста или предыдущего действия
+    # В реальности ты можешь получать его при показе фильма
+    movie_id = 589  # ← замени это на динамическое значение из твоей логики
+
+    await state.update_data(movie_id=movie_id)  # сохраняем в FSM
+    await message.answer("Оцените фильм:", reply_markup=RATE_KEYBOARD)
+
+
+@router.message(lambda msg: msg.text in RATING_MAP.keys())
+async def handle_rating(message: types.Message, state: FSMContext):
+    rating = RATING_MAP[message.text]
+    data = await state.get_data()
+    movie_id = data.get("movie_id")
+    tg_id = message.from_user.id
+
+    if not movie_id:
+        await message.answer("Ошибка: не удалось определить фильм.")
+        return
+
+    try:
+        result = await api_client.send_rating(tg_id=tg_id, movie_id=movie_id, rating=rating)
+        await message.answer("Спасибо за оценку!")
+        print("Результат оценки:", result)
+    except Exception as e:
+        await message.answer("Не удалось сохранить оценку.")
+        print("Ошибка при отправке оценки:", e)
+
+    await state.clear()
+    
+@router.message(Command("history"))
+async def cmd_history(message: types.Message):
+    tg_id = message.from_user.id
+
+    try:
+        response = await api_client.get_user_reviews(tg_id=tg_id)
+
+        if not response or not isinstance(response, dict):
+            await message.answer("Вы ещё не оценили ни один фильм.")
+            return
+
+        reviews = response.get("reviews", [])
+        if not reviews:
+            await message.answer("Вы ещё не оценили ни один фильм.")
+            return
+
+        text = "🎬 <b>Ваши оценки:</b>\n\n"
+        for review in reviews:
+            if not isinstance(review, dict):
+                print("Некорректный формат записи:", review)
+                continue
+
+            rating = review.get("rating", 0)
+            movie_id = review.get("movie_id", "Неизвестный ID")
+
+            text += f"🎥 Фильм ID: {movie_id}\n⭐ Оценка: {rating}/5\n\n"
+
+        await message.answer(text, parse_mode="HTML")
+
+    except Exception as e:
+        await message.answer("Ошибка при загрузке истории оценок.")
+        print("Ошибка при получении истории:", e)
+        
+@router.message(Command("help"))
+async def cmd_help(message: types.Message):
+    help_text = (
+        "📚 <b>Доступные команды:</b>\n\n"
+        "/start — Начать взаимодействие с ботом\n"
+        "/rate — Оценить текущий фильм\n"
+        "/history — Посмотреть историю своих оценок\n"
+        "/help — Показать это меню"
+    )
+    await message.answer(help_text, parse_mode="HTML")
 
 # Команда и коллбек \search
 async def show_search_keyboard(target, state: FSMContext):
