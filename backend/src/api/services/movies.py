@@ -49,7 +49,10 @@ class MovieRepository:
                 .replace("'", "")
                 .replace(" ", "")
                 .split(",")
+                if pd.notna(row["genres"])
             ]
+
+            MovieReadSchema.model_json_schema()
 
             movie_data = {
                 "movieId": row["movieId"],
@@ -58,10 +61,10 @@ class MovieRepository:
                 "description": (
                     str(row["description"]) if pd.notna(row["description"]) else None
                 ),
-                "year": int(row["year"]),
-                "rating": float(row["rating"]),
-                "poster_url": row["poster_url"],
-                "director": row["director"],
+                "year": int(row["year"]) if pd.notna(row["year"]) else None,
+                "rating": float(row["rating"]) if pd.notna(row["rating"]) else None,
+                "poster_url": row["poster_url"] if pd.notna(row["poster_url"]) else None,
+                "director": row["director"] if pd.notna(row["director"]) else None,
                 "actors": [actor.strip() for actor in row["actors"].split(",")],
             }
             movie_list.append(MovieReadSchema.model_validate(movie_data))
