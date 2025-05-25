@@ -63,7 +63,9 @@ class MovieRepository:
                 ),
                 "year": int(row["year"]) if pd.notna(row["year"]) else None,
                 "rating": float(row["rating"]) if pd.notna(row["rating"]) else None,
-                "poster_url": row["poster_url"] if pd.notna(row["poster_url"]) else None,
+                "poster_url": (
+                    row["poster_url"] if pd.notna(row["poster_url"]) else None
+                ),
                 "director": row["director"] if pd.notna(row["director"]) else None,
                 "actors": [actor.strip() for actor in row["actors"].split(",")],
             }

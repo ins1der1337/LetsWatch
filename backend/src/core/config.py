@@ -14,6 +14,12 @@ class RunApiConfig(BaseModel):
     port: int = 8000
 
 
+class TMDBApiConfig(BaseModel):
+    """Конфигурация TMDB API"""
+
+    api_key: str
+
+
 class AppDBConfig(BaseModel):
     """Конфигурация БД нашего приложения"""
 
@@ -31,6 +37,7 @@ class Settings(BaseSettings):
     api: RunApiConfig = RunApiConfig()
     movie: MovieDbConfig = MovieDbConfig()
     db: AppDBConfig
+    tmdb: TMDBApiConfig
 
     model_config = SettingsConfigDict(
         env_file=("../.env.example", "../.env"),
