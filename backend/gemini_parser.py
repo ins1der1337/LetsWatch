@@ -224,11 +224,11 @@ def enrich_dataframe(df: pd.DataFrame):
     )
 
     # Удаляем временные файлы после успешного завершения
-    if os.path.exists(PROGRESS_FILE):
-        os.remove(PROGRESS_FILE)
-    if os.path.exists(PROCESSED_IDS_FILE):
-        os.remove(PROCESSED_IDS_FILE)
-    print("Временные файлы удалены.")
+    # if os.path.exists(PROGRESS_FILE):
+    #     os.remove(PROGRESS_FILE)
+    # if os.path.exists(PROCESSED_IDS_FILE):
+    #     os.remove(PROCESSED_IDS_FILE)
+    # print("Временные файлы удалены.")
 
     return enriched_df
 
