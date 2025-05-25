@@ -47,8 +47,14 @@ def get_pagination_keyboard(current_page, total_pages=5, movie_id=1):
     # Второй ряд — кнопка "Меню" по центру
     keyboard.append(
         [
-            InlineKeyboardButton(text="🏠 Меню", callback_data="search",),
-            InlineKeyboardButton(text="⭐ Оценить", callback_data=f"rate_{movie_id}",),
+            InlineKeyboardButton(
+                text="🏠 Меню",
+                callback_data="search",
+            ),
+            InlineKeyboardButton(
+                text="⭐ Оценить",
+                callback_data=f"rate_{movie_id}",
+            ),
         ]
     )
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

@@ -1,3 +1,6 @@
+networks:
+  dev:
+
 services:
   backend:
     build:
@@ -16,6 +19,8 @@ services:
           target: /app
     depends_on:
       - pg
+    networks:
+      - dev
 
   bot:
     build:
@@ -23,13 +28,10 @@ services:
       dockerfile: Dockerfile
     container_name: letswatch_bot
     env_file: ./bot/src/.env
-    develop:
-      watch:
-        - action: sync
-          path: ./src
-          target: /app
     depends_on:
-      - pg
+      - backend
+    networks:
+      - dev
 
   pg:
     image: postgres
@@ -43,6 +45,8 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - dev
 
 volumes:
   pgdata:

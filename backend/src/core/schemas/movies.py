@@ -1,21 +1,20 @@
 from typing import Optional
 
 from pydantic import BaseModel, Field
-from fastapi import Query
 
 
 class MovieReadSchema(BaseModel):
     movie_id: int
     title: str = Field(max_length=256)
-    genres: list[str]
+    genres: Optional[list[str]]
     description: Optional[str] = Field(max_length=2048)
     year: int = Field(gt=0)
     poster_url: str
     rating: float = Field(..., ge=0, le=10)
     rating_counts: int
 
-    director: str = Field(max_length=64)
-    actors: list[str]
+    director: Optional[str] = Field(max_length=64)
+    actors: Optional[list[str]]
 
 
 class PaginationParams(BaseModel):

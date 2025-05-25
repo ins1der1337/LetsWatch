@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from aiogram import Router, types, F
 from aiogram.filters import CommandStart, Command
 
@@ -30,11 +32,14 @@ class SearchState(StatesGroup):
     waiting_for_director = State()
 
 
+photo_path = Path(__file__).parent.parent.parent / "images" / "welcome.png"
+
+
 # === Команда /start ===
 @router.message(CommandStart())
 async def cmd_start(message: types.Message):
     keyboard = get_search_type_keyboard()
-    photo = FSInputFile("src\images\welcome.png")
+    photo = FSInputFile(photo_path)
     await message.answer_photo(
         photo=photo,
         caption=LEXICON["start"].format(username=message.from_user.first_name),
@@ -221,7 +226,7 @@ async def process_search_input(message: types.Message, state: FSMContext):
         result = await api_client.search_movie(**params)
         print(result)
     except Exception as e:
-        await message.answer("Ошибка при поиске. Попробуйте позже.")
+        await message.answer(f"Ошибка при поиске. {e}")
         await state.clear()
         raise
 
@@ -242,26 +247,17 @@ async def process_search_input(message: types.Message, state: FSMContext):
     movie = result["movies"][0]  # Первый фильм
     print(movie)
 
-    description = ""
-    if movie.get("description"):
-        description = movie["description"]
-    if len(description) > 500:
-        description = description[:497] + "..."
-
-    year = movie["year"] if movie["year"] else ""
-
-    print(page)
     caption = LEXICON["movie_card"].format(
         title=movie["title"],
-        year=year,
+        year=movie["year"],
         stars=round(movie["rating"]) // 2 * "⭐️",
         rating=round(movie["rating"], 2),
         director=movie["director"],
         actors=", ".join(movie["actors"]),
         genres=", ".join(movie["genres"]),
-        description=description,
+        description=movie["description"],
     )
-    keyboard = get_pagination_keyboard(page, limit, movie_id=movie["movieId"])
+    keyboard = get_pagination_keyboard(page, limit, movie_id=movie["movie_id"])
 
     await message.answer_photo(
         photo=movie["poster_url"],
@@ -292,7 +288,7 @@ async def page_callback(callback: types.CallbackQuery, state: FSMContext):
     movie = movies[page - 1]
 
     keyboard = get_pagination_keyboard(
-        page, total_pages=page_size, movie_id=movie["movieId"]
+        page, total_pages=page_size, movie_id=movie["movie_id"]
     )
 
     description = ""

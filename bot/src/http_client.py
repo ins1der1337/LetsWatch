@@ -44,6 +44,7 @@ class ApiClient:
             params["director"] = director
 
         async with self._session.get("movies", params=params) as response:
+            response.raise_for_status()
             return await response.json()
 
     @property

@@ -28,7 +28,7 @@ class AppDBConfig(BaseModel):
 
 
 class MovieDbConfig(BaseModel):
-    movie_data: Path = Path(__file__).parent.parent.parent / "data" / "movies_enriched.csv"
+    movie_data: Path = Path(__file__).parent.parent.parent / "data" / "movies.csv"
 
 
 class Settings(BaseSettings):

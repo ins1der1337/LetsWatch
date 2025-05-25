@@ -21,7 +21,7 @@ class MovieRepository:
     def _init_dataframe(self):
         self.df = self.df.drop_duplicates(subset=["tmdbId", "title"])
         self.df = self.df.reset_index(drop=True)
-        self.df = self.df.drop(columns=["Unnamed: 0", "tmdbId"])
+        self.df = self.df.drop(columns="tmdbId")
         self.df = self.df.sort_values(by=["rating"], ascending=False)
 
     def _process_movie_response(
@@ -42,22 +42,21 @@ class MovieRepository:
         movie_list = []
 
         for _, row in df.iterrows():
-            genres = [
-                str(genre).strip(" ")
-                for genre in row["genres"]
-                .strip("[]")
-                .replace("'", "")
-                .split(",")
-                if pd.notna(row["genres"])
-            ]
-            actors = [
-                str(actor).strip(" ")
-                for actor in row["actors"]
-                .strip("[]")
-                .replace("'", "")
-                .split(",")
-                if pd.notna(row["actors"])
-            ]
+            if pd.notna(row["genres"]):
+                genres = [
+                    str(genre).strip(" ")
+                    for genre in row["genres"].strip("[]").replace("'", "").split(",")
+                ]
+            else:
+                genres = []
+
+            if pd.notna(row["actors"]):
+                actors = [
+                    str(actor).strip(" ")
+                    for actor in row["actors"].strip("[]").replace("'", "").split(",")
+                ]
+            else:
+                actors = []
 
             movie_data = {
                 "movie_id": row["movieId"],
@@ -68,7 +67,11 @@ class MovieRepository:
                 ),
                 "year": int(row["year"]) if pd.notna(row["year"]) else None,
                 "rating": float(row["rating"]) if pd.notna(row["rating"]) else None,
-                "rating_counts": int(row["rating_counts"]) if pd.notna(row["rating_counts"]) else None,
+                "rating_counts": (
+                    int(row["rating_counts"])
+                    if pd.notna(row["rating_counts"])
+                    else None
+                ),
                 "poster_url": (
                     row["poster_url"] if pd.notna(row["poster_url"]) else None
                 ),
