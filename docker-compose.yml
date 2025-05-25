@@ -17,6 +17,20 @@ services:
     depends_on:
       - pg
 
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: letswatch_bot
+    env_file: ./bot/src/.env
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app
+    depends_on:
+      - pg
+
   pg:
     image: postgres
     container_name: letswatch_db
