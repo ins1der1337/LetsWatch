@@ -43,31 +43,37 @@ class MovieRepository:
 
         for _, row in df.iterrows():
             genres = [
-                str(genre)
+                str(genre).strip(" ")
                 for genre in row["genres"]
                 .strip("[]")
                 .replace("'", "")
-                .replace(" ", "")
                 .split(",")
                 if pd.notna(row["genres"])
             ]
-
-            MovieReadSchema.model_json_schema()
+            actors = [
+                str(actor).strip(" ")
+                for actor in row["actors"]
+                .strip("[]")
+                .replace("'", "")
+                .split(",")
+                if pd.notna(row["actors"])
+            ]
 
             movie_data = {
-                "movieId": row["movieId"],
+                "movie_id": row["movieId"],
                 "title": row["title"],
-                "genres": genres,
+                "genres": genres if pd.notna(row["genres"]) else None,
                 "description": (
                     str(row["description"]) if pd.notna(row["description"]) else None
                 ),
                 "year": int(row["year"]) if pd.notna(row["year"]) else None,
                 "rating": float(row["rating"]) if pd.notna(row["rating"]) else None,
+                "rating_counts": int(row["rating_counts"]) if pd.notna(row["rating_counts"]) else None,
                 "poster_url": (
                     row["poster_url"] if pd.notna(row["poster_url"]) else None
                 ),
                 "director": row["director"] if pd.notna(row["director"]) else None,
-                "actors": [actor.strip() for actor in row["actors"].split(",")],
+                "actors": actors if pd.notna(row["actors"]) else None,
             }
             movie_list.append(MovieReadSchema.model_validate(movie_data))
 

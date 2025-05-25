@@ -5,19 +5,21 @@ from fastapi import Query
 
 
 class MovieReadSchema(BaseModel):
-    movieId: int
-    title: str = Field(max_length=64)
+    movie_id: int
+    title: str = Field(max_length=256)
     genres: list[str]
-    description: Optional[str]
+    description: Optional[str] = Field(max_length=2048)
     year: int = Field(gt=0)
     poster_url: str
     rating: float = Field(..., ge=0, le=10)
+    rating_counts: int
+
     director: str = Field(max_length=64)
     actors: list[str]
 
 
 class PaginationParams(BaseModel):
-    limit: int = Field(1, gt=0, le=15)
+    limit: int = Field(5, gt=0, le=15)
     page: int = Field(1, gt=0, le=10)
 
 

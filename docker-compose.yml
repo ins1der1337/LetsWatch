@@ -1,0 +1,34 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: letswatch_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DB__URL=postgresql+asyncpg://user:password@pg:5432/letswatch
+    env_file: ./backend/src/.env
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app
+    depends_on:
+      - pg
+
+  pg:
+    image: postgres
+    container_name: letswatch_db
+    environment:
+      POSTGRES_DB: letswatch
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
