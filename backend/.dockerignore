@@ -6,5 +6,6 @@ __pycache__
 **/.test.env
 
 docker-compose*.yml
+Dockerfile
 
 README.md

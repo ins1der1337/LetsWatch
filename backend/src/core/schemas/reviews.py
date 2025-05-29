@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -10,13 +11,15 @@ class ReviewCreateSchema(BaseModel):
 
 
 class ReviewReadSchema(ReviewCreateSchema):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     tg_id: int
     movie_id: int
+    title: Optional[str] = None
+    year: Optional[int] = None
     created_at: datetime
     updated_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
 
 
 class ReviewResponseSchema(BaseModel):

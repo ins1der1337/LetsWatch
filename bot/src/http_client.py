@@ -17,7 +17,12 @@ class ApiClient:
             await self._session.close()
         self._session = None
 
-    async def register_user(self, tg_id: int, username: str) -> None:
+
+class MovieService(ApiClient):
+    def __init__(self, base_url: str):
+        super().__init__(base_url)
+
+    async def register_user(self, tg_id: int, username: str):
         async with self._session.post(
             f"users/{tg_id}", json={"username": username}
         ) as response:
@@ -31,8 +36,7 @@ class ApiClient:
         title: Optional[str] = None,
         director: Optional[str] = None,
     ):
-
-        params = {"limit": 5, "page": 1}
+        params: dict[str, int | str] = {"limit": 5, "page": 1}
 
         if actor:
             params["actor"] = actor
@@ -47,20 +51,16 @@ class ApiClient:
             response.raise_for_status()
             return await response.json()
 
-    @property
-    def session(self):
-        return self._session
-
     async def send_rating(self, tg_id: int, movie_id: int, rating: int) -> dict:
         url = f"users/{tg_id}/reviews/{movie_id}"
         payload = {"rating": rating}
         async with self._session.post(url, json=payload) as response:
             return await response.json()
 
-    async def get_user_reviews(self, tg_id: int):
+    async def get_user_reviews(self, tg_id: int) -> dict:
         url = f"users/{tg_id}/reviews"
         async with self._session.get(url) as response:
             return await response.json()
 
 
-api_client = ApiClient(base_url=settings.api.url)
+api_client = MovieService(base_url=settings.api.url)

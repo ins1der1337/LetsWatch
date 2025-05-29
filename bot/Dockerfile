@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir --upgrade -r ./requirements.txt
 
 COPY . .
 
-CMD ["python", "./src/run.py"]
+CMD ["python", "./src/main.py"]

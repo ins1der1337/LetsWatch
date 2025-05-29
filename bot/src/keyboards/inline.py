@@ -14,8 +14,8 @@ def get_search_type_keyboard() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
+                InlineKeyboardButton(text="🎞️ По названию", callback_data="movie"),
                 InlineKeyboardButton(text="👤 По актёру", callback_data="actor"),
-                InlineKeyboardButton(text="🎞️ По фильму", callback_data="movie"),
             ],
             [
                 InlineKeyboardButton(text="🎭 По жанру", callback_data="genre"),

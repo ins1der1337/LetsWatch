@@ -30,5 +30,5 @@ class FiltersParams(BaseModel):
 
 class MoviesResponseSchema(BaseModel):
     movies: list[MovieReadSchema]
-    pagination: PaginationParams
-    totalMovies: int
+    pagination: Optional[PaginationParams]
+    totalMovies: Optional[int]

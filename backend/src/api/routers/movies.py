@@ -29,6 +29,15 @@ async def get_movies(
     return res
 
 
+@router.get("/{movie_id}", response_model=MoviesResponseSchema)
+async def get_movie_by_movie_id(movie_id: int):
+    """
+    Запрос для получения фильма по movie_id
+    """
+    res = search_model.search_movie_by_movie_id(movie_id)
+    return res
+
+
 @router.get("/{title}/recommends", response_model=MoviesResponseSchema)
 async def get_recommend_movies_for_title(
     pagination: PaginationDep,

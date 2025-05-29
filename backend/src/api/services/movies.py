@@ -15,23 +15,25 @@ from core.schemas.movies import PaginationParams, MovieReadSchema, MoviesRespons
 class MovieRepository:
 
     def __init__(self, movies_path: Path):
-        self.df: DataFrame = pd.read_csv(movies_path, encoding="utf-8")
+        self.df: DataFrame = pd.read_parquet(movies_path)
         self._init_dataframe()
 
     def _init_dataframe(self):
         self.df = self.df.drop_duplicates(subset=["tmdbId", "title"])
         self.df = self.df.reset_index(drop=True)
         self.df = self.df.drop(columns="tmdbId")
-        self.df = self.df.sort_values(by=["rating"], ascending=False)
+        self.df = self.df.sort_values(by=["rating_counts", "rating"], ascending=False)
 
     def _process_movie_response(
-        self, df: DataFrame, pagination: PaginationParams
+        self, df: DataFrame, pagination: Optional[PaginationParams] = None
     ) -> MoviesResponseSchema:
         count = len(df)
         if count == 0:
             raise NotFoundException("По вашему запросу ничего не найдено")
 
-        df = self._pagination_apply(df, pagination)
+        if pagination:
+            df = self._pagination_apply(df, pagination)
+
         movies = self._validate_dataframe(df)
         return MoviesResponseSchema(
             movies=movies, pagination=pagination, totalMovies=count
@@ -93,6 +95,12 @@ class MovieRepository:
         ]
         return df
 
+    @staticmethod
+    def normalize_text(text):
+        if isinstance(text, str):
+            return text.replace('ё', 'е').replace('Ё', 'Е')
+        return text
+
 
 class SearchModelRepository(MovieRepository):
 
@@ -110,23 +118,40 @@ class SearchModelRepository(MovieRepository):
         temp_df = self.df.copy()
 
         if title:
+            title = self.normalize_text(title)
             temp_df = temp_df[
-                temp_df["title"].str.contains(title, case=False, na=False)
+                temp_df["title"]
+                .apply(self.normalize_text)
+                .str.contains(title, case=False, na=False)
             ]
         if genre:
+            genre = self.normalize_text(genre)
             temp_df = temp_df[
-                temp_df["genres"].str.contains(genre, case=False, na=False)
+                temp_df["genres"]
+                .apply(self.normalize_text)
+                .str.contains(genre, case=False, na=False)
             ]
         if actor:
+            actor = self.normalize_text(actor)
             temp_df = temp_df[
-                temp_df["actors"].str.contains(actor, case=False, na=False)
+                temp_df["actors"]
+                .apply(self.normalize_text)
+                .str.contains(actor, case=False, na=False)
             ]
         if director:
+            director = self.normalize_text(director)
             temp_df = temp_df[
-                temp_df["director"].str.contains(director, case=False, na=False)
+                temp_df["director"]
+                .apply(self.normalize_text)
+                .str.contains(director, case=False, na=False)
             ]
 
         return self._process_movie_response(temp_df, pagination)
+
+    def search_movie_by_movie_id(self, movie_id: int) -> MoviesResponseSchema:
+        temp_df: DataFrame = self.df.copy()
+        temp_df = temp_df.loc[temp_df["movieId"] == movie_id]
+        return self._process_movie_response(temp_df)
 
 
 class RecommendModelRepository(MovieRepository):
@@ -180,7 +205,7 @@ class RecommendModelRepository(MovieRepository):
             raise NotFoundException("Рекомендательная система не работает")
 
         movie_candidates = self._recommend_model[
-            self._recommend_model["title"].str.lower() == title.lower()
+            self._recommend_model["title"].apply(self.normalize_text).str.lower() == title.lower()
         ]
 
         if movie_candidates.empty:

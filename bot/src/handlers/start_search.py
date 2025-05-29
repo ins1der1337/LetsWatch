@@ -1,24 +1,23 @@
 from pathlib import Path
 
-from aiogram import Router, types, F
-from aiogram.filters import CommandStart, Command
-
+from aiogram import F
+from aiogram import Router, types
+from aiogram.filters import Command
+from aiogram.filters import CommandStart
+from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from handlers.lexicon import LEXICON
 from aiogram.types import FSInputFile
-from aiogram.filters import StateFilter
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from http_client import api_client
 
+from handlers.lexicon import LEXICON
+from http_client import api_client
 from keyboards.inline import (
     get_main_menu_keyboard,
-    get_search_type_keyboard,
     get_pagination_keyboard,
     menu,
 )
-
-from http_client import api_client
+from keyboards.inline import get_search_type_keyboard
 
 router = Router()
 
@@ -30,22 +29,6 @@ class SearchState(StatesGroup):
     waiting_for_actor = State()
     waiting_for_genre = State()
     waiting_for_director = State()
-
-
-photo_path = Path(__file__).parent.parent.parent / "images" / "welcome.png"
-
-
-# === Команда /start ===
-@router.message(CommandStart())
-async def cmd_start(message: types.Message):
-    keyboard = get_search_type_keyboard()
-    photo = FSInputFile(photo_path)
-    await message.answer_photo(
-        photo=photo,
-        caption=LEXICON["start"].format(username=message.from_user.first_name),
-        reply_markup=keyboard,
-        parse_mode="HTML",
-    )
 
 
 RATE_KEYBOARD = ReplyKeyboardMarkup(
@@ -65,6 +48,25 @@ RATE_KEYBOARD = ReplyKeyboardMarkup(
 # Сопоставление эмодзи с числовой оценкой
 RATING_MAP = {"😍": 5, "😏": 4, "😐": 3, "😒": 2, "🤮🤢💩": 1}
 
+
+photo_path = Path(__file__).parent.parent.parent / "images" / "welcome.png"
+
+
+# === Команда /start ===
+@router.message(CommandStart())
+async def cmd_start(message: types.Message):
+    keyboard = get_search_type_keyboard()
+    resp = await api_client.register_user(
+        tg_id=message.from_user.id, username=message.from_user.username
+    )
+
+    photo = FSInputFile(photo_path)
+    await message.answer_photo(
+        photo=photo,
+        caption=LEXICON["start"].format(username=message.from_user.first_name),
+        reply_markup=keyboard,
+        parse_mode="HTML",
+    )
 
 @router.callback_query(F.data.startswith("rate_"))
 async def rate_callback(callback: types.CallbackQuery, state: FSMContext):
@@ -216,7 +218,7 @@ async def process_search_input(message: types.Message, state: FSMContext):
     data = await state.get_data()
     search_type = data.get("search_type")  # 'title', 'actor', 'genre', 'director'
     # Подготовим аргументы для вызова search_movie
-    params = {}
+    params = dict()
 
     params[search_type] = user_input
     print(params)
@@ -317,48 +319,3 @@ async def page_callback(callback: types.CallbackQuery, state: FSMContext):
         reply_markup=keyboard,
     )
     await callback.answer()
-
-
-# +++++++++++++++++++++++++++
-
-# === Поиск по названию фильма ===
-"""@router.message(SearchState.waiting_for_title)
-async def handle_movie_search(message: types.Message, state: FSMContext):
-    title = message.text.strip()
-    results = search_by_name(title)
-
-#     if results.empty:
-#         await message.answer("Фильмы не найдены.")
-#     else:
-#         for _, row in results.iterrows():
-#             text = f"🎬 <b>{row['title']}</b> ({row['year']})\n" \
-#                    f"Жанры: {row['genres']}\n" \
-#                    f"Рейтинг: ⭐ {row['rating']}"
-#             await message.answer(text)
-
-#             # Предложить рекомендации
-#             recommendations = recommend_by_title(row['title'])
-#             if not recommendations is None:
-#                 await message.answer("Попробуйте посмотреть:")
-#                 for _, rec in recommendations.iterrows():
-#                     await message.answer(f"👉 {rec['title']} — {rec['genres']}")
-
-#     await state.clear()
-
-
-# # === Поиск по актёру ===
-# @router.message(SearchState.waiting_for_actor)
-# async def handle_actor_search(message: types.Message, state: FSMContext):
-#     actor = message.text.strip()
-#     # results = search_by_actor(actor)
-
-#     if results.empty:
-#         await message.answer("Фильмы с этим актёром не найдены.")
-#     else:
-#         for _, row in results.iterrows():
-#             text = f"🎬 <b>{row['title']}</b> ({row['year']})\n" \
-#                    f"Актёры: {row['actors']}\n" \
-#                    f"Рейтинг: ⭐ {row['rating']}"
-#             await message.answer(text)
-
-    await state.clear()"""

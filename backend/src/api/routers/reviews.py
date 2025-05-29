@@ -14,9 +14,7 @@ router = APIRouter(prefix="/users", tags=["Оценки"])
 @router.get("/{tg_id}/reviews", response_model=ReviewResponseSchema)
 async def get_movie_review(session: DbSession, tg_id: int):
     reviews = await ReviewsRepository.get_user_reviews(session, tg_id)
-    return ReviewResponseSchema(
-        reviews=[ReviewReadSchema.model_validate(review) for review in reviews]
-    )
+    return reviews
 
 
 @router.get("/{tg_id}/reviews/{movie_id}", response_model=ReviewReadSchema)

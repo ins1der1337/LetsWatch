@@ -1,12 +1,14 @@
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy import insert, select
 
 from api.exceptions import NotFoundException, BadRequestException
+from api.services.movies import search_model
 from api.services.users import UserRepository
 from core.models import Review, User
-from core.schemas.reviews import ReviewCreateSchema
+from core.schemas.movies import MovieReadSchema, MoviesResponseSchema
+from core.schemas.reviews import ReviewCreateSchema, ReviewResponseSchema, ReviewReadSchema
 
 
 class ReviewsRepository:
@@ -44,17 +46,44 @@ class ReviewsRepository:
     @classmethod
     async def get_user_movie_review(
         cls, session: AsyncSession, tg_id: int, movie_id: int
-    ) -> Review:
+    ) -> ReviewReadSchema:
         review = await session.scalar(
             select(Review).where(Review.tg_id == tg_id, Review.movie_id == movie_id)
         )
+
         if not review:
             raise NotFoundException("Отзыв не найден")
-        return review
+
+        review_schema = ReviewReadSchema.model_validate(review)
+        movie = search_model.search_movie_by_movie_id(movie_id=review_schema.movie_id)
+        movie_schema = MoviesResponseSchema.model_validate(movie)
+        movie_data = {
+            "title": movie_schema.movies[0].title,
+            "year": movie_schema.movies[0].year,
+        }
+
+        return ReviewReadSchema(**review_schema.model_dump(), **movie_data)
 
     @classmethod
     async def get_user_reviews(
         cls, session: AsyncSession, tg_id: int
-    ) -> Iterable[Review]:
-        res = await session.scalars(select(Review).where(Review.tg_id == tg_id))
-        return res.all()
+    ) -> ReviewResponseSchema:
+        reviews = await session.scalars(select(Review).where(Review.tg_id == tg_id))
+
+        res: list[ReviewReadSchema] = []
+
+        for review in reviews.all():
+            review_schema = ReviewReadSchema.model_validate(review)
+            movie = search_model.search_movie_by_movie_id(movie_id=review_schema.movie_id)
+
+            movie_schema = MoviesResponseSchema.model_validate(movie)
+            movie_data = {
+                "title": movie_schema.movies[0].title,
+                "year": movie_schema.movies[0].year,
+            }
+            data = {**review_schema.model_dump(), **movie_data}
+
+            result = ReviewReadSchema(**data)
+            res.append(result)
+
+        return ReviewResponseSchema(reviews=res)
