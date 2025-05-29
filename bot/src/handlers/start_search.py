@@ -127,9 +127,10 @@ async def cmd_history(message: types.Message):
                 continue
 
             rating = review.get("rating", 0)
-            movie_id = review.get("movie_id", "Неизвестный ID")
+            movie_title = review.get("title", "Неизвестный фильм")
+            year = review.get("year", "Неизвестный год")
 
-            text += f"🎥 Фильм ID: {movie_id}\n⭐ Оценка: {rating}/5\n\n"
+            text += f"🎥 {movie_title} ({year}г.)\n⭐ Оценка: {rating}/5\n\n"
 
         await message.answer(text, parse_mode="HTML")
 

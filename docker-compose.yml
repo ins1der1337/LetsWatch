@@ -10,6 +10,7 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - TMDB_API_KEY=your_api_key
       - DB__URL=postgresql+asyncpg://user:password@pg:5432/letswatch
     env_file: ./backend/src/.env
     develop:
