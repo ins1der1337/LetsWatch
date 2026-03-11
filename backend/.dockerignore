@@ -1,11 +1,37 @@
-.idea/
-__pycache__
-
+# Виртуальные окружения
 .venv/
-**/.env
-**/.test.env
+venv/
 
-docker-compose*.yml
+# Кэш Python и uv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.venv
+.eggs
+
+# Кэш uv
+.cache/
+uv-cache/
+
+# Git и IDE
+.git/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Окружение и логи
+.env
+*.log
+pytest_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker (не копируем сами конфиги в образ)
 Dockerfile
-
-README.md
+docker-compose*.yml
+.dockerignore

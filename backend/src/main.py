@@ -1,13 +1,10 @@
-import os
-import sys
 from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 from sqlalchemy import text
-
-sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 from api.dependencies import DbSession
 from api.exceptions import AppException
@@ -30,6 +27,19 @@ app = FastAPI(
     lifespan=lifespan,
     version="0.1.7",
     default_response_class=ORJSONResponse,
+)
+
+origins = [
+    "http://localhost",
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(main_router)

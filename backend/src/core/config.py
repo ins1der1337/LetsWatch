@@ -17,7 +17,7 @@ class RunApiConfig(BaseModel):
 class TMDBApiConfig(BaseModel):
     """Конфигурация TMDB API"""
 
-    api_key: str
+    api_key: str = ""
 
 
 class AppDBConfig(BaseModel):
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     api: RunApiConfig = RunApiConfig()
     movie: MovieDbConfig = MovieDbConfig()
     db: AppDBConfig
-    tmdb: TMDBApiConfig
+    # tmdb: TMDBApiConfig
 
     model_config = SettingsConfigDict(
         env_file=("../.env.example", "../.env"),

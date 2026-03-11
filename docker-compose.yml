@@ -1,6 +1,3 @@
-networks:
-  dev:
-
 services:
   backend:
     build:
@@ -10,32 +7,28 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - TMDB_API_KEY=your_api_key
       - DB__URL=postgresql+asyncpg://user:password@pg:5432/letswatch
-    env_file: ./backend/src/.env
-    develop:
-      watch:
-        - action: sync
-          path: ./src
-          target: /app
+    volumes:
+      - ./backend:/app
+      - /app/.venv
     depends_on:
-      - pg
-    networks:
-      - dev
+      pg:
+        condition: service_healthy
+    command: >
+      sh -c "uv run alembic upgrade head && 
+             uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
 
-  bot:
-    build:
-      context: ./bot
-      dockerfile: Dockerfile
-    container_name: letswatch_bot
-    env_file: ./bot/src/.env
-    depends_on:
-      - backend
-    networks:
-      - dev
+#  bot:
+#    build:
+#      context: ./bot
+#      dockerfile: Dockerfile
+#    container_name: letswatch_bot
+#    env_file: ./bot/src/.env
+#    depends_on:
+#      - backend
 
   pg:
-    image: postgres
+    image: postgres:17
     container_name: letswatch_db
     environment:
       POSTGRES_DB: letswatch
@@ -46,8 +39,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    networks:
-      - dev
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user" ]
+      interval: 5s
+      timeout: 3s
+      retries: 3
 
 volumes:
   pgdata:

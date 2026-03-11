@@ -1,19 +1,16 @@
-FROM python:3.12-slim
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-WORKDIR app/
+WORKDIR /app
 
-ENV PYTHONPATH=/app/src
-ENV PYTHONUNBUFFERED=1
+# Copy только файлы зависимостей для кэширования
+COPY pyproject.toml uv.lock ./
 
-COPY requirements.txt .
-COPY .dockerignore .
-
-RUN pip install --no-cache-dir -r ./requirements.txt
+# Кэшируем установку зависимостей
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked
 
 COPY . .
 
-RUN chmod +x ./src/prestart.sh
-
-ENTRYPOINT ["./src/prestart.sh"]
-
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH=/app/src
+ENV PYTHONUNBUFFERED=1

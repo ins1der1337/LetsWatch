@@ -8,7 +8,7 @@ load_dotenv()
 
 class ApiConfig(BaseModel):
     port: int = 8000
-    host: str = f"http://127.0.0.1:{port}"
+    host: str = f"http://backend:{port}"
     url: str = f"{host}/api"
 
 
